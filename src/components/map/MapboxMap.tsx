@@ -33,7 +33,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/outdoors-v12', // Better style for seeing terrain
+        style: 'mapbox://styles/mapbox/outdoors-v12',
         center: [18.0686, 59.3293],
         zoom: 13,
         pitch: 60,
@@ -81,7 +81,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         map.current.removeLayer('3d-buildings');
       }
 
-      // Add 3D buildings layer with proper shadow casting
+      // Add 3D buildings layer with enhanced properties
       map.current.addLayer({
         id: '3d-buildings',
         source: 'composite',
@@ -90,12 +90,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         type: 'fill-extrusion',
         minzoom: 10,
         paint: {
-          'fill-extrusion-color': [
-            'case',
-            ['boolean', ['feature-state', 'shadow'], false],
-            'rgba(100, 100, 100, 0.8)',
-            '#d4d4d8'
-          ],
+          'fill-extrusion-color': '#d4d4d8',
           'fill-extrusion-height': [
             'interpolate',
             ['linear'],
@@ -125,31 +120,37 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     }
   }, [styleLoaded]);
 
-  // Update sun lighting and shadows based on corrected sun position
+  // Update realistic shadow system based on actual sun position
   useEffect(() => {
     if (!map.current || !styleLoaded || !map.current.getLayer('3d-buildings')) return;
 
     try {
-      // Correct shadow direction calculation
-      // Sun azimuth: 0° = North, 90° = East, 180° = South, 270° = West
-      // Shadow points opposite to sun direction
-      const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
-      const shadowAngle = (shadowAzimuth - 90) * Math.PI / 180;
-      
-      // Calculate shadow offset based on sun elevation (lower sun = longer shadows)
-      const shadowLength = sunPosition.elevation > 0 ? (90 - sunPosition.elevation) * 0.8 : 0;
-      const shadowOffsetX = Math.cos(shadowAngle) * shadowLength;
-      const shadowOffsetY = Math.sin(shadowAngle) * shadowLength;
-
-      // Update building colors based on sun position and time of day
+      // Calculate realistic shadow properties based on sun position
       const isDay = sunPosition.elevation > 0;
       const lightIntensity = Math.max(0, Math.sin(sunPosition.elevation * Math.PI / 180));
       
+      // Sun azimuth correction: 0° = North, 90° = East, 180° = South, 270° = West
+      // Convert to standard mathematical angle (0° = East, counterclockwise)
+      const sunAzimuthMath = (90 - sunPosition.azimuth + 360) % 360;
+      const sunAzimuthRadians = (sunAzimuthMath * Math.PI) / 180;
+
+      // Calculate shadow direction (opposite to sun direction)
+      const shadowAzimuthRadians = sunAzimuthRadians + Math.PI;
+      
+      // Shadow length based on sun elevation (lower sun = longer shadows)
+      const shadowLength = sunPosition.elevation > 0 ? 
+        Math.max(10, 100 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
+      
+      // Calculate shadow offset in map units (meters)
+      const shadowOffsetX = Math.cos(shadowAzimuthRadians) * shadowLength;
+      const shadowOffsetY = Math.sin(shadowAzimuthRadians) * shadowLength;
+
+      // Update building colors based on time of day and sun intensity
       const buildingColor = isDay 
-        ? `hsl(${200 + sunPosition.elevation * 0.3}, ${10 + lightIntensity * 20}%, ${75 + lightIntensity * 15}%)`
+        ? `hsl(${200 + sunPosition.elevation * 0.5}, ${15 + lightIntensity * 25}%, ${70 + lightIntensity * 20}%)`
         : '#4a5568';
 
-      // Update 3D buildings with proper lighting
+      // Update 3D buildings with dynamic lighting
       map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
         'interpolate',
         ['linear'],
@@ -160,43 +161,41 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         isDay ? '#e2e8f0' : '#2d3748'
       ]);
 
-      // Add ground shadow layer if it doesn't exist
-      if (!map.current.getLayer('building-shadows')) {
+      // Remove existing shadow layer if it exists
+      if (map.current.getLayer('building-shadows')) {
+        map.current.removeLayer('building-shadows');
+      }
+      if (map.current.getSource('building-shadows')) {
+        map.current.removeSource('building-shadows');
+      }
+
+      // Add realistic ground shadows that stay fixed regardless of camera angle
+      if (isDay && sunPosition.elevation > 5) { // Only show shadows when sun is reasonably high
+        const shadowOpacity = Math.max(0.1, Math.min(0.7, (90 - sunPosition.elevation) / 90 * 0.8));
+        
         map.current.addLayer({
           id: 'building-shadows',
           source: 'composite',
           'source-layer': 'building',
           filter: ['==', 'extrude', 'true'],
           type: 'fill',
-          minzoom: 10,
+          minzoom: 12,
           paint: {
-            'fill-color': 'rgba(0, 0, 0, 0.4)',
+            'fill-color': 'rgba(0, 0, 0, 0.6)',
             'fill-opacity': [
               'interpolate',
               ['linear'],
               ['zoom'],
-              10,
+              12,
               0,
-              14,
-              isDay ? Math.max(0.1, (90 - sunPosition.elevation) / 90 * 0.6) : 0
+              16,
+              shadowOpacity
             ],
+            // Use translate to create shadows that stay fixed in world coordinates
             'fill-translate': [shadowOffsetX, shadowOffsetY],
-            'fill-translate-anchor': 'viewport'
+            'fill-translate-anchor': 'map' // This ensures shadows stay fixed to map coordinates
           }
         }, '3d-buildings');
-      } else {
-        // Update existing shadow layer
-        const shadowOpacity = isDay ? Math.max(0.1, (90 - sunPosition.elevation) / 90 * 0.6) : 0;
-        map.current.setPaintProperty('building-shadows', 'fill-opacity', [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10,
-          0,
-          14,
-          shadowOpacity
-        ]);
-        map.current.setPaintProperty('building-shadows', 'fill-translate', [shadowOffsetX, shadowOffsetY]);
       }
 
     } catch (error) {
@@ -210,7 +209,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     map.current.setBearing(mapRotation[0]);
   }, [mapRotation]);
 
-  // Update venue markers with improved hover detection
+  // Update venue markers with proper positioning that follows map transformations
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -230,15 +229,15 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       }
     }
 
-    // Add venue markers with improved hover zones
+    // Add venue markers with improved hover detection
     venuesToShow.forEach(venue => {
       const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
       
-      // Create marker element with larger hover area
+      // Create marker element with precise hover area
       const el = document.createElement('div');
       el.className = 'venue-marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
+      el.style.width = '20px';
+      el.style.height = '20px';
       el.style.borderRadius = '50%';
       el.style.backgroundColor = inSunlight ? '#f59e0b' : '#64748b';
       el.style.border = '2px solid white';
@@ -246,50 +245,36 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       el.style.boxShadow = inSunlight ? '0 0 12px rgba(245, 158, 11, 0.6)' : '0 2px 4px rgba(0,0,0,0.2)';
       el.style.position = 'relative';
       el.style.zIndex = '10';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
 
       // Add venue type icon
       const icon = venue.type === 'cafe' ? '☕' : 
                    venue.type === 'bar' ? '🍺' : 
                    venue.type === 'park' ? '🌳' : '🍽️';
       
-      // Create inner icon container
-      const iconContainer = document.createElement('div');
-      iconContainer.style.position = 'absolute';
-      iconContainer.style.top = '50%';
-      iconContainer.style.left = '50%';
-      iconContainer.style.transform = 'translate(-50%, -50%)';
-      iconContainer.style.fontSize = '12px';
-      iconContainer.innerHTML = icon;
-      
-      // Create larger invisible hover area
-      const hoverArea = document.createElement('div');
-      hoverArea.style.position = 'absolute';
-      hoverArea.style.top = '-8px';
-      hoverArea.style.left = '-8px';
-      hoverArea.style.width = '40px';
-      hoverArea.style.height = '40px';
-      hoverArea.style.borderRadius = '50%';
-      hoverArea.style.backgroundColor = 'transparent';
-      hoverArea.style.zIndex = '11';
+      el.innerHTML = `<span style="font-size: 10px;">${icon}</span>`;
 
-      el.appendChild(iconContainer);
-      el.appendChild(hoverArea);
-
-      // Create marker
+      // Create marker with precise coordinates
       const marker = new mapboxgl.Marker(el)
         .setLngLat([venue.lng, venue.lat])
         .addTo(map.current!);
 
-      // Add hover events to the hover area
-      hoverArea.addEventListener('mouseenter', () => {
+      // Add hover events with better detection area
+      el.addEventListener('mouseenter', (e) => {
+        e.stopPropagation();
         onVenueHover?.(venue);
-        el.style.transform = 'scale(1.1)';
+        el.style.transform = 'scale(1.2)';
         el.style.transition = 'transform 0.2s ease';
+        el.style.zIndex = '20';
       });
       
-      hoverArea.addEventListener('mouseleave', () => {
+      el.addEventListener('mouseleave', (e) => {
+        e.stopPropagation();
         onVenueHover?.(null);
         el.style.transform = 'scale(1)';
+        el.style.zIndex = '10';
       });
 
       markersRef.current.push(marker);

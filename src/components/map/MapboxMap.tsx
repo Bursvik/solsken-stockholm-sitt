@@ -43,7 +43,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     map.current.on('load', () => {
       if (!map.current) return;
       
-      // Add 3D buildings layer
+      // Add 3D buildings layer with shadows
       map.current.addLayer({
         id: '3d-buildings',
         source: 'composite',
@@ -52,7 +52,12 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         type: 'fill-extrusion',
         minzoom: 10,
         paint: {
-          'fill-extrusion-color': '#aaa',
+          'fill-extrusion-color': [
+            'case',
+            ['boolean', ['feature-state', 'shadow'], false],
+            'rgba(100, 100, 100, 0.8)',
+            '#d4d4d8'
+          ],
           'fill-extrusion-height': [
             'interpolate',
             ['linear'],
@@ -71,9 +76,35 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
             12.5,
             ['get', 'min_height']
           ],
-          'fill-extrusion-opacity': 0.8
+          'fill-extrusion-opacity': 0.9,
+          'fill-extrusion-ambient-occlusion-intensity': 0.3,
+          'fill-extrusion-ambient-occlusion-radius': 3.0
         }
       });
+
+      // Add shadow layer for ground shadows
+      map.current.addLayer({
+        id: 'building-shadows',
+        source: 'composite',
+        'source-layer': 'building',
+        filter: ['==', 'extrude', 'true'],
+        type: 'fill',
+        minzoom: 10,
+        paint: {
+          'fill-color': 'rgba(0, 0, 0, 0.3)',
+          'fill-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10,
+            0,
+            14,
+            0.6
+          ],
+          'fill-translate': [10, 10],
+          'fill-translate-anchor': 'viewport'
+        }
+      }, '3d-buildings');
 
       setMapLoaded(true);
     });
@@ -83,23 +114,46 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     };
   }, []);
 
-  // Update sun lighting based on sun position
+  // Update sun lighting and shadows based on sun position
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Update building colors based on sun position
-    const buildingColor = sunPosition.elevation > 0 
-      ? `hsl(${30 + sunPosition.elevation}, 20%, ${60 + sunPosition.elevation * 0.3}%)`
-      : '#555';
+    // Calculate shadow direction based on sun position
+    const shadowOffsetX = Math.cos((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
+    const shadowOffsetY = Math.sin((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
 
-    map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', buildingColor);
+    // Update building colors based on sun position and time of day
+    const isDay = sunPosition.elevation > 0;
+    const buildingColor = isDay 
+      ? `hsl(${200 + sunPosition.elevation * 0.5}, 15%, ${85 - sunPosition.elevation * 0.2}%)`
+      : '#4a5568';
 
-    // Adjust map lighting for day/night
-    if (sunPosition.elevation <= 0) {
+    // Update 3D buildings
+    map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
+      'interpolate',
+      ['linear'],
+      ['get', 'height'],
+      0,
+      buildingColor,
+      200,
+      isDay ? '#e2e8f0' : '#2d3748'
+    ]);
+
+    // Update shadow position and opacity based on sun elevation
+    const shadowOpacity = isDay ? Math.max(0.1, (90 - sunPosition.elevation) / 90 * 0.4) : 0;
+    
+    map.current.setPaintProperty('building-shadows', 'fill-opacity', shadowOpacity);
+    map.current.setPaintProperty('building-shadows', 'fill-translate', [shadowOffsetX, shadowOffsetY]);
+
+    // Adjust map style for day/night
+    if (sunPosition.elevation <= -6) {
       // Night time - darker style
       map.current.setStyle('mapbox://styles/mapbox/dark-v11');
+    } else if (sunPosition.elevation <= 6) {
+      // Dawn/dusk - navigation style
+      map.current.setStyle('mapbox://styles/mapbox/navigation-day-v1');
     } else {
-      // Day time - lighter style
+      // Day time - light style
       map.current.setStyle('mapbox://styles/mapbox/light-v11');
     }
   }, [sunPosition, mapLoaded]);

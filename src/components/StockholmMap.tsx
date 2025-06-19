@@ -42,7 +42,7 @@ const StockholmMap = ({ currentTime, sunPosition }: StockholmMapProps) => {
     drawBaseMap(ctx, canvas.offsetWidth, canvas.offsetHeight);
     
     // Draw shadows based on sun position
-    drawShadows(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight);
+    drawShadows(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight, currentTime);
     
     // Draw venues
     drawVenues(ctx, stockholmVenues, canvas.offsetWidth, canvas.offsetHeight, sunPosition);
@@ -78,40 +78,46 @@ const StockholmMap = ({ currentTime, sunPosition }: StockholmMapProps) => {
     });
   };
 
-  const drawShadows = (ctx: CanvasRenderingContext2D, sunPos: SunPosition, width: number, height: number) => {
-    if (sunPos.elevation <= 0) {
+  const drawShadows = (ctx: CanvasRenderingContext2D, sunPos: SunPosition, width: number, height: number, currentTime: Date) => {
+    const hour = currentTime.getHours();
+    
+    // Check if it's actually nighttime (before 6 AM or after 9 PM) or if sun is very low
+    if (hour < 6 || hour > 21 || sunPos.elevation < -6) {
       // Night time - draw dark overlay
       ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
       ctx.fillRect(0, 0, width, height);
       return;
     }
 
-    // Calculate shadow directions based on sun azimuth
-    const shadowAngle = (sunPos.azimuth - 180) * Math.PI / 180; // Opposite direction of sun
-    const shadowLength = calculateShadowLength(30, sunPos.elevation); // Assuming 30m building height
-    
-    ctx.fillStyle = `rgba(15, 23, 42, ${Math.max(0.2, 0.7 - sunPos.elevation / 90)})`;
-    
-    // Draw building shadows
-    const buildings = [
-      { x: width * 0.3, y: height * 0.4, w: 20, h: 30 },
-      { x: width * 0.5, y: height * 0.3, w: 25, h: 40 },
-      { x: width * 0.4, y: height * 0.6, w: 15, h: 25 },
-      { x: width * 0.6, y: height * 0.5, w: 30, h: 35 },
-    ];
-
-    buildings.forEach(building => {
-      const shadowX = building.x + Math.cos(shadowAngle) * Math.min(shadowLength / 5, 50);
-      const shadowY = building.y + Math.sin(shadowAngle) * Math.min(shadowLength / 5, 50);
+    // During daylight hours, only draw building shadows if sun is above horizon
+    if (sunPos.elevation > 0) {
+      // Calculate shadow directions based on sun azimuth
+      const shadowAngle = (sunPos.azimuth - 180) * Math.PI / 180; // Opposite direction of sun
+      const shadowLength = calculateShadowLength(30, sunPos.elevation); // Assuming 30m building height
       
-      ctx.beginPath();
-      ctx.moveTo(building.x, building.y);
-      ctx.lineTo(building.x + building.w, building.y);
-      ctx.lineTo(shadowX + building.w, shadowY);
-      ctx.lineTo(shadowX, shadowY);
-      ctx.closePath();
-      ctx.fill();
-    });
+      ctx.fillStyle = `rgba(15, 23, 42, ${Math.max(0.1, 0.4 - sunPos.elevation / 180)})`;
+      
+      // Draw building shadows
+      const buildings = [
+        { x: width * 0.3, y: height * 0.4, w: 20, h: 30 },
+        { x: width * 0.5, y: height * 0.3, w: 25, h: 40 },
+        { x: width * 0.4, y: height * 0.6, w: 15, h: 25 },
+        { x: width * 0.6, y: height * 0.5, w: 30, h: 35 },
+      ];
+
+      buildings.forEach(building => {
+        const shadowX = building.x + Math.cos(shadowAngle) * Math.min(shadowLength / 5, 50);
+        const shadowY = building.y + Math.sin(shadowAngle) * Math.min(shadowLength / 5, 50);
+        
+        ctx.beginPath();
+        ctx.moveTo(building.x, building.y);
+        ctx.lineTo(building.x + building.w, building.y);
+        ctx.lineTo(shadowX + building.w, shadowY);
+        ctx.lineTo(shadowX, shadowY);
+        ctx.closePath();
+        ctx.fill();
+      });
+    }
   };
 
   const drawVenues = (ctx: CanvasRenderingContext2D, venues: typeof stockholmVenues, width: number, height: number, sunPos: SunPosition) => {

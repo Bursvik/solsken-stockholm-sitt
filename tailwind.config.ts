@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,30 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				sun: {
+					50: '#fffbeb',
+					100: '#fef3c7',
+					200: '#fde68a',
+					300: '#fcd34d',
+					400: '#fbbf24',
+					500: '#f59e0b',
+					600: '#d97706',
+					700: '#b45309',
+					800: '#92400e',
+					900: '#78350f',
+				},
+				shadow: {
+					50: '#f8fafc',
+					100: '#f1f5f9',
+					200: '#e2e8f0',
+					300: '#cbd5e1',
+					400: '#94a3b8',
+					500: '#64748b',
+					600: '#475569',
+					700: '#334155',
+					800: '#1e293b',
+					900: '#0f172a',
 				}
 			},
 			borderRadius: {
@@ -84,11 +109,17 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'sun-rise': {
+					'0%': { transform: 'translateY(100px)', opacity: '0.3' },
+					'50%': { transform: 'translateY(-20px)', opacity: '1' },
+					'100%': { transform: 'translateY(-100px)', opacity: '0.8' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'sun-rise': 'sun-rise 20s ease-in-out infinite'
 			}
 		}
 	},

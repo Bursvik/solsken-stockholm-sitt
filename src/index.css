@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -99,5 +100,23 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .gradient-sun {
+    background: linear-gradient(45deg, #f59e0b, #fbbf24, #fcd34d);
+  }
+  
+  .gradient-sky {
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+  }
+  
+  .gradient-shadow {
+    background: linear-gradient(45deg, #1e293b, #334155, #64748b);
+  }
+  
+  .sun-glow {
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.6), 0 0 100px rgba(245, 158, 11, 0.4);
   }
 }

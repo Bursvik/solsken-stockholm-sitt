@@ -55,3 +55,7 @@ export const drawVenues = (ctx: CanvasRenderingContext2D, width: number, height:
 export const getSunnyVenueCount = (sunPos: SunPosition) => {
   return stockholmVenues.filter(v => sunPos.elevation > 0 && v.sunExposed).length;
 };
+
+export const getSunnyVenues = (sunPos: SunPosition) => {
+  return stockholmVenues.filter(v => sunPos.elevation > 0 && v.sunExposed);
+};

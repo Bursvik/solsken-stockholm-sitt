@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapCanvas from './map/MapCanvas';
 import MapControls from './map/MapControls';
-import MapLegend from './map/MapLegend';
 import MapTimeSlider from './map/MapTimeSlider';
-import { getSunnyVenueCount } from './map/mapRendering/venueRenderer';
+import SunnyVenuesDropdown from './map/SunnyVenuesDropdown';
 
 interface StockholmMapProps {
   currentTime: Date;
@@ -59,8 +58,6 @@ const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange }: 
     setTransform({ scale: 1, translateX: 0, translateY: 0 });
   };
 
-  const sunnyVenueCount = getSunnyVenueCount(sunPosition);
-
   return (
     <div className="relative w-full h-full">
       <MapCanvas
@@ -81,22 +78,18 @@ const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange }: 
         zoomLevel={transform.scale}
       />
 
-      <MapLegend />
-
       <MapTimeSlider
         currentTime={currentTime}
         selectedDate={selectedDate}
         onTimeChange={onTimeChange}
       />
 
-      {/* Venue count indicator */}
-      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 border border-sun-200">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-sun-600">
-            {sunnyVenueCount}
-          </div>
-          <div className="text-xs text-gray-600">venues in sun</div>
-        </div>
+      {/* Sunny venues dropdown - positioned at top right */}
+      <div className="absolute top-4 right-4">
+        <SunnyVenuesDropdown 
+          sunPosition={sunPosition}
+          currentTime={currentTime}
+        />
       </div>
     </div>
   );

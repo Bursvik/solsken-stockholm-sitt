@@ -107,8 +107,8 @@ const StockholmMap = ({
         onFilterChange={setFilter}
       />
 
-      {/* Top right controls - positioned like in VenueList */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+      {/* Top right controls - Map/List toggle and Sunny venues dropdown */}
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
         <MapViewToggle 
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}

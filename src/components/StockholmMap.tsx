@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapCanvas from './map/MapCanvas';
@@ -11,9 +10,10 @@ interface StockholmMapProps {
   sunPosition: SunPosition;
   selectedDate: Date;
   onTimeChange: (time: Date) => void;
+  onDateChange: (date: Date) => void;
 }
 
-const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange }: StockholmMapProps) => {
+const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange, onDateChange }: StockholmMapProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [transform, setTransform] = useState({
@@ -82,6 +82,7 @@ const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange }: 
         currentTime={currentTime}
         selectedDate={selectedDate}
         onTimeChange={onTimeChange}
+        onDateChange={onDateChange}
       />
 
       {/* Sunny venues dropdown - positioned at top right */}

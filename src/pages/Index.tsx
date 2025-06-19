@@ -81,6 +81,7 @@ const Index = () => {
                   sunPosition={sunPosition}
                   selectedDate={selectedDate}
                   onTimeChange={setCurrentTime}
+                  onDateChange={setSelectedDate}
                 />
               ) : (
                 <VenueList 

@@ -62,87 +62,91 @@ const MapTimeSlider = ({ currentTime, selectedDate, onTimeChange, onDateChange, 
   const isDaylight = currentHour >= sunrise && currentHour <= sunset;
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-sun-200 shadow-lg">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">Time of Day</span>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs border-sun-300 hover:bg-sun-50"
-              >
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {format(selectedDate, "MMM d")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                initialFocus
-                className="p-3"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isDaylight ? 'bg-sun-500' : 'bg-gray-400'}`}></div>
-            <span className="text-xs text-gray-600">
-              {isDaylight ? '☀️ Daylight' : '🌙 Night'}
-            </span>
+    <div className="absolute bottom-4 left-4 right-4 z-20">
+      <div className="bg-white/95 backdrop-blur-sm rounded-lg px-4 py-2 border border-sun-200 shadow-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Time of Day</span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-xs border-sun-300 hover:bg-sun-50"
+                >
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {format(selectedDate, "MMM d")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="p-3"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           
-          <span className="text-lg font-bold text-gray-900">
-            {currentTime.toLocaleTimeString('en-GB', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isDaylight ? 'bg-sun-500' : 'bg-gray-400'}`}></div>
+              <span className="text-xs text-gray-600">
+                {isDaylight ? '☀️ Daylight' : '🌙 Night'}
+              </span>
+            </div>
+            
+            <span className="text-base font-bold text-gray-900">
+              {currentTime.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </span>
+            
+            <Button
+              onClick={playAnimation}
+              disabled={isPlaying}
+              size="sm"
+              className="h-6 w-6 p-0 gradient-sun text-white"
+            >
+              {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="relative px-2">
+          {/* Background gradient showing day/night */}
+          <div className="absolute top-2 left-2 right-2 h-4 rounded-full overflow-hidden border border-gray-200">
+            <div className="h-full bg-gradient-to-r from-slate-800 via-slate-400 to-slate-800">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-200"
+                style={{
+                  marginLeft: `${(sunrise / 24) * 100}%`,
+                  width: `${((sunset - sunrise) / 24) * 100}%`
+                }}
+              ></div>
+            </div>
+          </div>
           
-          <Button
-            onClick={playAnimation}
-            disabled={isPlaying}
-            size="sm"
-            className="h-7 w-7 p-0 gradient-sun text-white"
-          >
-            {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-          </Button>
-        </div>
-      </div>
-      
-      <div className="relative px-2">
-        <Slider
-          value={[currentHour]}
-          onValueChange={handleTimeSliderChange}
-          min={0}
-          max={24}
-          step={0.25}
-          className="w-full"
-        />
-        
-        {/* Daylight indicator bar */}
-        <div className="absolute top-6 left-2 right-2 h-1 bg-gray-200 rounded">
-          <div 
-            className="h-full bg-gradient-sun rounded"
-            style={{
-              marginLeft: `${(sunrise / 24) * 100}%`,
-              width: `${((sunset - sunrise) / 24) * 100}%`
-            }}
-          ></div>
-        </div>
-        
-        <div className="flex justify-between text-xs text-gray-500 mt-3">
-          <span>00:00</span>
-          <span className="text-sun-600 font-medium">06:00 ☀️</span>
-          <span>12:00</span>
-          <span className="text-sun-600 font-medium">☀️ 20:00</span>
-          <span>24:00</span>
+          <Slider
+            value={[currentHour]}
+            onValueChange={handleTimeSliderChange}
+            min={0}
+            max={24}
+            step={0.25}
+            className="w-full relative z-10"
+          />
+          
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>00:00</span>
+            <span className="text-sun-600 font-medium">06:00</span>
+            <span>12:00</span>
+            <span className="text-sun-600 font-medium">20:00</span>
+            <span>24:00</span>
+          </div>
         </div>
       </div>
     </div>

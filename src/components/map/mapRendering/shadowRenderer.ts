@@ -4,37 +4,21 @@ import { SunPosition, calculateShadowLength } from '@/utils/sunCalculator';
 export const drawShadows = (ctx: CanvasRenderingContext2D, sunPos: SunPosition, width: number, height: number, currentTime: Date) => {
   const hour = currentTime.getHours();
   const minute = currentTime.getMinutes();
-  const timeDecimal = hour + minute / 60;
   
-  // Only apply nighttime overlay during actual night hours (before 6 AM or after 9 PM)
-  if (hour < 6 || hour > 21 || sunPos.elevation <= 0) {
+  // Only apply nighttime overlay during actual night hours when sun is below horizon
+  if (sunPos.elevation <= 0) {
     // Night time - draw dark overlay
     ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
     ctx.fillRect(0, 0, width, height);
     return;
   }
 
-  // During daylight hours, draw building shadows based on sun position relative to noon
+  // During daylight hours, draw building shadows based on actual sun position
   if (sunPos.elevation > 0) {
-    // Calculate how far we are from solar noon (12:00)
-    const hoursFromNoon = Math.abs(12 - timeDecimal);
-    
-    // Shadow direction based on time of day
-    // Morning: shadows point west (270°), Evening: shadows point east (90°)
-    // At noon: minimal shadows pointing north
-    let shadowAngle;
-    if (timeDecimal < 12) {
-      // Morning: sun is in east, shadows point west
-      shadowAngle = (270 - (hoursFromNoon * 15)) * Math.PI / 180; // 15° per hour
-    } else {
-      // Afternoon/Evening: sun is in west, shadows point east
-      shadowAngle = (90 + (hoursFromNoon * 15)) * Math.PI / 180;
-    }
-    
-    // Calculate shadow length based on distance from noon
-    // Longer shadows in morning/evening, shorter at midday
-    const maxShadowHours = 6; // Maximum shadow at 6 hours from noon
-    const shadowMultiplier = Math.min(hoursFromNoon / maxShadowHours, 1);
+    // Convert azimuth to shadow direction (azimuth is degrees from north, clockwise)
+    // Shadow points in opposite direction of sun
+    const shadowAzimuth = (sunPos.azimuth + 180) % 360;
+    const shadowAngle = (shadowAzimuth - 90) * Math.PI / 180; // Convert to radians, adjust for canvas coordinates
     
     // Stockholm buildings with realistic heights and positions
     const buildings = [
@@ -51,21 +35,20 @@ export const drawShadows = (ctx: CanvasRenderingContext2D, sunPos: SunPosition, 
       { x: width * 0.54, y: height * 0.58, w: 14, h: 28, height: 84 }, // Residential towers
     ];
 
-    // Shadow opacity based on time from noon - darker shadows when sun is lower
-    const shadowOpacity = Math.max(0.3, 0.7 * shadowMultiplier);
+    // Calculate shadow opacity based on sun elevation - higher sun = darker shadows
+    const shadowOpacity = Math.max(0.2, Math.min(0.8, sunPos.elevation / 90 * 0.6));
     ctx.fillStyle = `rgba(15, 23, 42, ${shadowOpacity})`;
 
     buildings.forEach(building => {
-      // Calculate shadow length: longer when further from noon
-      const baseShadowLength = building.height * shadowMultiplier * 2;
-      const maxShadowLength = Math.min(baseShadowLength, 120);
+      // Calculate shadow length based on sun elevation using proper trigonometry
+      const shadowLength = calculateShadowLength(building.height, sunPos.elevation);
       
-      // At noon, shadows are very short and point roughly north
-      const shadowLength = timeDecimal === 12 ? building.height * 0.1 : maxShadowLength;
+      // Limit shadow length to reasonable bounds
+      const maxShadowLength = Math.min(shadowLength, 200);
       
-      // Calculate shadow end position
-      const shadowEndX = building.x + Math.cos(shadowAngle) * shadowLength;
-      const shadowEndY = building.y + Math.sin(shadowAngle) * shadowLength;
+      // Calculate shadow end position using actual sun azimuth
+      const shadowEndX = building.x + Math.cos(shadowAngle) * maxShadowLength;
+      const shadowEndY = building.y + Math.sin(shadowAngle) * maxShadowLength;
       
       // Draw shadow as a polygon
       ctx.beginPath();

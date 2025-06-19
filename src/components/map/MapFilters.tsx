@@ -18,14 +18,14 @@ const MapFilters = ({ filter, onFilterChange }: MapFiltersProps) => {
 
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-      <div className="flex items-center space-x-1 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-sun-200 shadow-lg">
+      <div className="flex items-center space-x-1 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 border border-sun-200 shadow-lg">
         {filters.map(({ key, label }) => (
           <Button
             key={key}
             variant={filter === key ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onFilterChange(key as any)}
-            className={`text-xs h-7 px-2 ${
+            className={`text-xs h-6 px-2 ${
               filter === key 
                 ? 'bg-sun-500 hover:bg-sun-600 text-white' 
                 : 'hover:bg-sun-100 text-gray-700'

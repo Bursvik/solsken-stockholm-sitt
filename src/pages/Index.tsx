@@ -54,6 +54,8 @@ const Index = () => {
                 <VenueList 
                   currentTime={currentTime}
                   sunPosition={sunPosition}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
               )}
             </Card>
@@ -82,12 +84,12 @@ const Index = () => {
             </Card>
 
             <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Sunny Venues</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Sunny Places</h3>
               <div className="text-2xl font-bold text-sun-600 mb-2">
-                12 venues
+                18 places
               </div>
               <p className="text-sm text-gray-600 mb-4">
-                Currently have direct sunlight on their outdoor seating
+                Currently have direct sunlight on their outdoor areas
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -96,11 +98,15 @@ const Index = () => {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Cafes</span>
-                  <span className="font-medium">3</span>
+                  <span className="font-medium">5</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Bars</span>
-                  <span className="font-medium">1</span>
+                  <span className="font-medium">3</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Parks</span>
+                  <span className="font-medium">2</span>
                 </div>
               </div>
             </Card>
@@ -111,7 +117,7 @@ const Index = () => {
                 <p>• Best sun exposure is typically between 11 AM - 3 PM</p>
                 <p>• South-facing terraces get the most sunlight</p>
                 <p>• Check weather conditions for cloud coverage</p>
-                <p>• Taller buildings create more shadows in winter</p>
+                <p>• Parks offer great sunny spaces for picnics</p>
               </div>
             </Card>
           </div>

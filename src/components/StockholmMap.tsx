@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapCanvas from './map/MapCanvas';
@@ -5,6 +6,7 @@ import MapControls from './map/MapControls';
 import MapTimeSlider from './map/MapTimeSlider';
 import SunnyVenuesDropdown from './map/SunnyVenuesDropdown';
 import MapViewToggle from './map/MapViewToggle';
+import MapFilters from './map/MapFilters';
 
 interface StockholmMapProps {
   currentTime: Date;
@@ -27,6 +29,7 @@ const StockholmMap = ({
 }: StockholmMapProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [filter, setFilter] = useState<'all' | 'sunny' | 'cafe' | 'restaurant' | 'bar' | 'park'>('all');
   const [transform, setTransform] = useState({
     scale: 1,
     translateX: 0,
@@ -75,6 +78,7 @@ const StockholmMap = ({
         currentTime={currentTime}
         sunPosition={sunPosition}
         transform={transform}
+        filter={filter}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -95,6 +99,12 @@ const StockholmMap = ({
         onTimeChange={onTimeChange}
         onDateChange={onDateChange}
         sunPosition={sunPosition}
+      />
+
+      {/* Map Filters */}
+      <MapFilters
+        filter={filter}
+        onFilterChange={setFilter}
       />
 
       {/* Top right controls */}

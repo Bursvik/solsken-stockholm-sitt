@@ -15,6 +15,7 @@ interface MapCanvasProps {
     translateX: number;
     translateY: number;
   };
+  filter?: 'all' | 'sunny' | 'cafe' | 'restaurant' | 'bar' | 'park';
   onMouseDown: (e: React.MouseEvent) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
@@ -26,6 +27,7 @@ const MapCanvas = ({
   currentTime,
   sunPosition,
   transform,
+  filter = 'all',
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -35,6 +37,8 @@ const MapCanvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredVenue, setHoveredVenue] = useState<any>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -83,11 +87,11 @@ const MapCanvas = ({
     // Draw all map layers
     drawDetailedMap(ctx, canvas.offsetWidth, canvas.offsetHeight);
     drawShadows(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight, currentTime);
-    drawVenues(ctx, canvas.offsetWidth, canvas.offsetHeight, sunPosition);
+    drawVenues(ctx, canvas.offsetWidth, canvas.offsetHeight, sunPosition, filter, currentHour);
     drawSunIndicator(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight);
 
     ctx.restore();
-  }, [currentTime, sunPosition, transform]);
+  }, [currentTime, sunPosition, transform, filter]);
 
   return (
     <div className="relative w-full h-full">

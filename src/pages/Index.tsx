@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,6 +79,8 @@ const Index = () => {
                 <StockholmMap 
                   currentTime={currentTime}
                   sunPosition={sunPosition}
+                  selectedDate={selectedDate}
+                  onTimeChange={setCurrentTime}
                 />
               ) : (
                 <VenueList 

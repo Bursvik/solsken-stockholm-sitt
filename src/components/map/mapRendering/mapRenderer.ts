@@ -1,119 +1,139 @@
 
 export const drawDetailedMap = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-  // Clear canvas with water color (Baltic Sea and Lake Mälaren)
-  ctx.fillStyle = '#2563eb'; // Stockholm water blue
+  // Clear canvas with Baltic Sea color
+  ctx.fillStyle = '#1e40af'; // Deep blue for Baltic Sea
   ctx.fillRect(0, 0, width, height);
 
-  // Stockholm's main islands and districts with realistic shapes
-  const stockholmFeatures = [
-    // Gamla Stan (Old Town) - triangular historic island
+  // Stockholm's archipelago and main water bodies
+  const waterBodies = [
+    // Riddarfjärden (main bay)
+    { x: width * 0.15, y: height * 0.45, w: width * 0.35, h: height * 0.15, type: 'bay' },
+    // Strömmen (central waterway)
+    { x: width * 0.45, y: height * 0.48, w: width * 0.15, h: height * 0.08, type: 'channel' },
+    // Saltsjön (eastern waters)
+    { x: width * 0.65, y: height * 0.35, w: width * 0.35, h: height * 0.4, type: 'sea' },
+    // Årstaviken (southern bay)
+    { x: width * 0.35, y: height * 0.7, w: width * 0.25, h: height * 0.15, type: 'bay' },
+  ];
+
+  waterBodies.forEach(water => {
+    ctx.fillStyle = water.type === 'sea' ? '#1e40af' : '#2563eb';
+    ctx.beginPath();
+    ctx.roundRect(water.x, water.y, water.w, water.h, 12);
+    ctx.fill();
+  });
+
+  // Stockholm's main islands and districts with accurate shapes
+  const stockholmAreas = [
+    // Gamla Stan (Old Town) - historic center
     {
-      type: 'island',
-      color: '#d97706',
+      name: 'Gamla Stan',
+      color: '#f59e0b',
       points: [
-        { x: width * 0.485, y: height * 0.50 },
-        { x: width * 0.515, y: height * 0.48 },
-        { x: width * 0.520, y: height * 0.52 },
-        { x: width * 0.475, y: height * 0.525 }
+        { x: width * 0.475, y: height * 0.485 },
+        { x: width * 0.525, y: height * 0.475 },
+        { x: width * 0.535, y: height * 0.51 },
+        { x: width * 0.52, y: height * 0.535 },
+        { x: width * 0.47, y: height * 0.53 }
       ]
     },
     
-    // Södermalm - large southern island with irregular coastline
+    // Södermalm - bohemian southern island
     {
-      type: 'island',
-      color: '#f3f4f6',
-      points: [
-        { x: width * 0.35, y: height * 0.55 },
-        { x: width * 0.63, y: height * 0.52 },
-        { x: width * 0.65, y: height * 0.58 },
-        { x: width * 0.62, y: height * 0.68 },
-        { x: width * 0.38, y: height * 0.72 },
-        { x: width * 0.32, y: height * 0.65 }
-      ]
-    },
-    
-    // Norrmalm - business district (mainland)
-    {
-      type: 'mainland',
-      color: '#6b7280',
-      points: [
-        { x: width * 0.42, y: height * 0.25 },
-        { x: width * 0.60, y: height * 0.22 },
-        { x: width * 0.62, y: height * 0.45 },
-        { x: width * 0.48, y: height * 0.48 },
-        { x: width * 0.38, y: height * 0.42 }
-      ]
-    },
-    
-    // Östermalm - upscale residential area
-    {
-      type: 'mainland',
+      name: 'Södermalm',
       color: '#e5e7eb',
       points: [
-        { x: width * 0.55, y: height * 0.18 },
-        { x: width * 0.78, y: height * 0.15 },
-        { x: width * 0.82, y: height * 0.35 },
-        { x: width * 0.65, y: height * 0.42 },
-        { x: width * 0.58, y: height * 0.25 }
+        { x: width * 0.32, y: height * 0.55 },
+        { x: width * 0.68, y: height * 0.52 },
+        { x: width * 0.7, y: height * 0.58 },
+        { x: width * 0.68, y: height * 0.68 },
+        { x: width * 0.35, y: height * 0.72 },
+        { x: width * 0.28, y: height * 0.65 }
       ]
     },
     
-    // Djurgården - royal island park
+    // Norrmalm - central business district
     {
-      type: 'park',
-      color: '#16a34a',
+      name: 'Norrmalm',
+      color: '#6b7280',
       points: [
-        { x: width * 0.62, y: height * 0.42 },
-        { x: width * 0.85, y: height * 0.38 },
-        { x: width * 0.88, y: height * 0.55 },
-        { x: width * 0.68, y: height * 0.58 }
+        { x: width * 0.4, y: height * 0.25 },
+        { x: width * 0.62, y: height * 0.22 },
+        { x: width * 0.65, y: height * 0.42 },
+        { x: width * 0.48, y: height * 0.47 },
+        { x: width * 0.35, y: height * 0.4 }
       ]
     },
     
-    // Vasastan - northern residential district
+    // Östermalm - upscale district
     {
-      type: 'residential',
+      name: 'Östermalm',
+      color: '#f3f4f6',
+      points: [
+        { x: width * 0.58, y: height * 0.18 },
+        { x: width * 0.8, y: height * 0.15 },
+        { x: width * 0.85, y: height * 0.32 },
+        { x: width * 0.68, y: height * 0.38 },
+        { x: width * 0.6, y: height * 0.25 }
+      ]
+    },
+    
+    // Djurgården - royal park island
+    {
+      name: 'Djurgården',
+      color: '#22c55e',
+      points: [
+        { x: width * 0.65, y: height * 0.4 },
+        { x: width * 0.88, y: height * 0.35 },
+        { x: width * 0.92, y: height * 0.52 },
+        { x: width * 0.72, y: height * 0.58 }
+      ]
+    },
+    
+    // Vasastan - northern residential area
+    {
+      name: 'Vasastan',
       color: '#f9fafb',
       points: [
-        { x: width * 0.32, y: height * 0.15 },
-        { x: width * 0.52, y: height * 0.12 },
-        { x: width * 0.55, y: height * 0.28 },
-        { x: width * 0.35, y: height * 0.32 }
+        { x: width * 0.3, y: height * 0.12 },
+        { x: width * 0.55, y: height * 0.1 },
+        { x: width * 0.58, y: height * 0.25 },
+        { x: width * 0.32, y: height * 0.28 }
       ]
     },
     
     // Kungsholmen - western island
     {
-      type: 'island',
+      name: 'Kungsholmen',
       color: '#f3f4f6',
       points: [
-        { x: width * 0.18, y: height * 0.32 },
-        { x: width * 0.35, y: height * 0.28 },
-        { x: width * 0.38, y: height * 0.48 },
-        { x: width * 0.22, y: height * 0.52 }
+        { x: width * 0.15, y: height * 0.3 },
+        { x: width * 0.32, y: height * 0.27 },
+        { x: width * 0.35, y: height * 0.45 },
+        { x: width * 0.18, y: height * 0.48 }
       ]
     },
     
-    // Skeppsholmen - small museum island
+    // Skeppsholmen - museum island
     {
-      type: 'museum',
+      name: 'Skeppsholmen',
       color: '#dc2626',
       points: [
-        { x: width * 0.52, y: height * 0.47 },
-        { x: width * 0.56, y: height * 0.46 },
-        { x: width * 0.57, y: height * 0.50 },
-        { x: width * 0.53, y: height * 0.51 }
+        { x: width * 0.54, y: height * 0.46 },
+        { x: width * 0.58, y: height * 0.445 },
+        { x: width * 0.585, y: height * 0.485 },
+        { x: width * 0.545, y: height * 0.495 }
       ]
     }
   ];
 
-  // Draw all Stockholm features
-  stockholmFeatures.forEach(feature => {
-    ctx.fillStyle = feature.color;
+  // Draw all areas
+  stockholmAreas.forEach(area => {
+    ctx.fillStyle = area.color;
     ctx.beginPath();
-    ctx.moveTo(feature.points[0].x, feature.points[0].y);
+    ctx.moveTo(area.points[0].x, area.points[0].y);
     
-    feature.points.forEach((point, index) => {
+    area.points.forEach((point, index) => {
       if (index > 0) {
         ctx.lineTo(point.x, point.y);
       }
@@ -122,174 +142,136 @@ export const drawDetailedMap = (ctx: CanvasRenderingContext2D, width: number, he
     ctx.closePath();
     ctx.fill();
     
-    // Add subtle borders
+    // Add borders
     ctx.strokeStyle = '#9ca3af';
     ctx.lineWidth = 1;
     ctx.stroke();
   });
 
-  // Stockholm's famous bridges
-  ctx.fillStyle = '#4b5563';
+  // Major bridges connecting the islands
+  ctx.fillStyle = '#374151';
   const bridges = [
-    // Centralbron (Central Bridge)
-    { x: width * 0.44, y: height * 0.43, w: width * 0.08, h: 4, angle: 0.3 },
-    
-    // Västerbron (West Bridge) - iconic arch bridge
-    { x: width * 0.28, y: height * 0.42, w: width * 0.12, h: 5, angle: 0.1 },
-    
-    // Djurgårdsbron (Djurgården Bridge)
-    { x: width * 0.58, y: height * 0.42, w: width * 0.06, h: 3, angle: -0.2 },
-    
-    // Slussenbron (Slusen Bridge)
-    { x: width * 0.48, y: height * 0.52, w: width * 0.05, h: 3, angle: 0 }
+    // Centralbron
+    { x: width * 0.44, y: height * 0.43, w: width * 0.08, h: 4 },
+    // Västerbron
+    { x: width * 0.25, y: height * 0.42, w: width * 0.15, h: 5 },
+    // Djurgårdsbron
+    { x: width * 0.6, y: height * 0.41, w: width * 0.08, h: 3 },
+    // Slussenbron
+    { x: width * 0.47, y: height * 0.52, w: width * 0.06, h: 3 },
+    // Strömbron
+    { x: width * 0.51, y: height * 0.47, w: width * 0.05, h: 3 },
   ];
 
   bridges.forEach(bridge => {
-    ctx.save();
-    ctx.translate(bridge.x + bridge.w/2, bridge.y + bridge.h/2);
-    ctx.rotate(bridge.angle);
-    ctx.fillRect(-bridge.w/2, -bridge.h/2, bridge.w, bridge.h);
-    ctx.restore();
+    ctx.fillRect(bridge.x, bridge.y, bridge.w, bridge.h);
   });
 
-  // Major waterways and channels
-  ctx.fillStyle = '#1d4ed8';
-  const waterChannels = [
-    // Strömmen (the main channel)
-    { x: width * 0.45, y: height * 0.44, w: width * 0.12, h: width * 0.03 },
-    
-    // Riddarfjärden (bay west of Gamla Stan)
-    { x: width * 0.25, y: height * 0.48, w: width * 0.18, h: width * 0.06 },
-    
-    // Saltsjön (eastern water)
-    { x: width * 0.75, y: height * 0.35, w: width * 0.25, h: height * 0.35 }
-  ];
-
-  waterChannels.forEach(channel => {
-    ctx.beginPath();
-    ctx.roundRect(channel.x, channel.y, channel.w, channel.h, 8);
-    ctx.fill();
-  });
-
-  // Stockholm's iconic buildings and landmarks
+  // Iconic Stockholm landmarks
   const landmarks = [
-    // Stockholm City Hall with tower
-    { x: width * 0.28, y: height * 0.38, w: 20, h: 45, type: 'cityhall', tower: true },
-    
-    // Royal Palace
-    { x: width * 0.49, y: height * 0.49, w: 18, h: 25, type: 'palace' },
-    
-    // Riddarholmen Church spire
-    { x: width * 0.47, y: height * 0.52, w: 8, h: 35, type: 'church' },
-    
-    // Modern skyscrapers in business district
-    { x: width * 0.45, y: height * 0.32, w: 12, h: 50, type: 'office' },
-    { x: width * 0.48, y: height * 0.30, w: 14, h: 55, type: 'office' },
-    { x: width * 0.52, y: height * 0.33, w: 10, h: 42, type: 'office' },
-    
-    // Östermalm residential buildings
-    { x: width * 0.62, y: height * 0.25, w: 15, h: 30, type: 'residential' },
-    { x: width * 0.66, y: height * 0.22, w: 12, h: 28, type: 'residential' },
-    
-    // Södermalm mixed buildings
-    { x: width * 0.42, y: height * 0.62, w: 13, h: 25, type: 'mixed' },
-    { x: width * 0.48, y: height * 0.60, w: 11, h: 22, type: 'mixed' },
-    { x: width * 0.54, y: height * 0.58, w: 14, h: 28, type: 'mixed' }
+    // Stockholm City Hall (Stadshuset)
+    { x: width * 0.27, y: height * 0.37, w: 25, h: 35, type: 'cityhall' },
+    // Royal Palace (Kungliga Slottet)
+    { x: width * 0.495, y: height * 0.485, w: 20, h: 25, type: 'palace' },
+    // Riddarholmen Church
+    { x: width * 0.465, y: height * 0.515, w: 8, h: 30, type: 'church' },
+    // Modern skyscrapers in Norrmalm
+    { x: width * 0.45, y: height * 0.3, w: 15, h: 60, type: 'office' },
+    { x: width * 0.48, y: height * 0.28, w: 18, h: 70, type: 'office' },
+    // Globen Arena (south)
+    { x: width * 0.5, y: height * 0.8, w: 20, h: 20, type: 'arena' },
   ];
 
   landmarks.forEach(building => {
-    let fillColor;
     switch (building.type) {
       case 'cityhall':
-        fillColor = '#dc2626'; // Red brick
+        // Red brick City Hall with tower
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(building.x, building.y, building.w, building.h);
+        // Tower
+        ctx.fillRect(building.x + building.w - 8, building.y - 20, 6, 20);
+        // Crown
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(building.x + building.w - 7, building.y - 23, 4, 3);
         break;
       case 'palace':
-        fillColor = '#fbbf24'; // Royal gold
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(building.x, building.y, building.w, building.h);
         break;
       case 'church':
-        fillColor = '#059669'; // Traditional green copper
+        ctx.fillStyle = '#059669';
+        ctx.fillRect(building.x, building.y, building.w, building.h);
+        // Spire
+        ctx.beginPath();
+        ctx.moveTo(building.x + building.w/2, building.y - 10);
+        ctx.lineTo(building.x + building.w/2 - 3, building.y);
+        ctx.lineTo(building.x + building.w/2 + 3, building.y);
+        ctx.closePath();
+        ctx.fill();
         break;
       case 'office':
-        fillColor = '#374151'; // Modern glass/steel
+        ctx.fillStyle = '#374151';
+        ctx.fillRect(building.x, building.y, building.w, building.h);
         break;
-      case 'residential':
-        fillColor = '#6b7280'; // Classic Stockholm gray
+      case 'arena':
+        ctx.fillStyle = '#f3f4f6';
+        ctx.beginPath();
+        ctx.arc(building.x + building.w/2, building.y + building.h/2, building.w/2, 0, 2 * Math.PI);
+        ctx.fill();
         break;
-      default:
-        fillColor = '#4b5563';
     }
     
-    ctx.fillStyle = fillColor;
-    ctx.fillRect(building.x, building.y, building.w, building.h);
-    
-    // Add tower for City Hall
-    if (building.tower) {
-      ctx.fillRect(building.x + building.w - 8, building.y - 15, 6, 15);
-      // Crown on top
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(building.x + building.w - 7, building.y - 18, 4, 3);
-    }
-    
-    // Add windows to buildings
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    for (let i = 3; i < building.h - 3; i += 5) {
-      for (let j = 2; j < building.w - 2; j += 4) {
-        ctx.fillRect(building.x + j, building.y + i, 2, 3);
+    // Add windows to tall buildings
+    if (building.type === 'office' && building.h > 40) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let i = 5; i < building.h - 5; i += 8) {
+        for (let j = 3; j < building.w - 3; j += 5) {
+          ctx.fillRect(building.x + j, building.y + i, 2, 4);
+        }
       }
     }
   });
 
-  // Parks and green spaces
-  ctx.fillStyle = '#22c55e';
-  const parks = [
-    // Kungsträdgården (King's Garden)
-    { x: width * 0.50, y: width * 0.40, w: width * 0.04, h: height * 0.04 },
-    
-    // Humlegården
-    { x: width * 0.58, y: height * 0.28, w: width * 0.06, h: height * 0.05 },
-    
-    // Large parts of Djurgården (already drawn as park area)
-    
-    // Tanto (southern park)
-    { x: width * 0.38, y: height * 0.68, w: width * 0.08, h: height * 0.04 }
-  ];
-
-  parks.forEach(park => {
-    ctx.beginPath();
-    ctx.roundRect(park.x, park.y, park.w, park.h, 6);
-    ctx.fill();
-    
-    // Add tree symbols
-    ctx.fillStyle = '#15803d';
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(park.x + (park.w * (i + 1) / 4), park.y + park.h/2, 2, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  });
-
-  // Add street network
+  // Major streets and thoroughfares
   ctx.strokeStyle = '#d1d5db';
   ctx.lineWidth = 2;
   
-  const majorStreets = [
-    // Strandvägen (waterfront boulevard)
-    { start: { x: width * 0.58, y: height * 0.32 }, end: { x: width * 0.75, y: height * 0.30 } },
-    
-    // Kungsgatan (main shopping street)
-    { start: { x: width * 0.38, y: height * 0.35 }, end: { x: width * 0.58, y: height * 0.33 } },
-    
-    // Götgatan (Södermalm main street)
-    { start: { x: width * 0.45, y: height * 0.58 }, end: { x: width * 0.58, y: height * 0.55 } },
-    
-    // Sveavägen (major north-south street)
-    { start: { x: width * 0.48, y: height * 0.20 }, end: { x: width * 0.50, y: height * 0.45 } }
+  const streets = [
+    // Strandvägen
+    { start: { x: width * 0.6, y: height * 0.3 }, end: { x: width * 0.78, y: height * 0.28 } },
+    // Kungsgatan
+    { start: { x: width * 0.35, y: height * 0.33 }, end: { x: width * 0.6, y: height * 0.31 } },
+    // Götgatan
+    { start: { x: width * 0.45, y: height * 0.56 }, end: { x: width * 0.6, y: height * 0.54 } },
+    // Sveavägen
+    { start: { x: width * 0.48, y: height * 0.18 }, end: { x: width * 0.5, y: height * 0.42 } },
+    // Hornsgatan
+    { start: { x: width * 0.32, y: height * 0.58 }, end: { x: width * 0.65, y: height * 0.56 } },
   ];
 
-  majorStreets.forEach(street => {
+  streets.forEach(street => {
     ctx.beginPath();
     ctx.moveTo(street.start.x, street.start.y);
     ctx.lineTo(street.end.x, street.end.y);
     ctx.stroke();
+  });
+
+  // Parks and green spaces
+  ctx.fillStyle = '#16a34a';
+  const parks = [
+    // Kungsträdgården
+    { x: width * 0.52, y: height * 0.38, w: width * 0.04, h: height * 0.06 },
+    // Humlegården
+    { x: width * 0.6, y: height * 0.26, w: width * 0.06, h: height * 0.05 },
+    // Tantolunden
+    { x: width * 0.35, y: height * 0.68, w: width * 0.08, h: height * 0.04 },
+    // Observatorielunden
+    { x: width * 0.42, y: height * 0.22, w: width * 0.04, h: height * 0.03 },
+  ];
+
+  parks.forEach(park => {
+    ctx.beginPath();
+    ctx.roundRect(park.x, park.y, park.w, park.h, 4);
+    ctx.fill();
   });
 };

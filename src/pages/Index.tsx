@@ -1,9 +1,7 @@
+
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import StockholmMap from '@/components/StockholmMap';
-import TimeControls from '@/components/TimeControls';
 import VenueList from '@/components/VenueList';
 import SunIndicator from '@/components/SunIndicator';
 import { calculateSunPosition } from '@/utils/sunCalculator';
@@ -13,7 +11,7 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   
-  const sunPosition = calculateSunPosition(currentTime, 59.3293, 18.0686); // Stockholm coordinates
+  const sunPosition = calculateSunPosition(currentTime, 59.3293, 18.0686);
 
   return (
     <div className="min-h-screen bg-gradient-sky">
@@ -31,46 +29,13 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <SunIndicator sunPosition={sunPosition} />
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-                <Button
-                  variant={viewMode === 'map' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('map')}
-                  className="rounded-none"
-                >
-                  Map View
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="rounded-none"
-                >
-                  List View
-                </Button>
-              </div>
-            </div>
+            <SunIndicator sunPosition={sunPosition} />
           </div>
         </div>
       </div>
 
-      {/* Time Controls */}
-      <div className="container mx-auto px-4 py-4">
-        <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
-          <TimeControls
-            currentTime={currentTime}
-            selectedDate={selectedDate}
-            onTimeChange={setCurrentTime}
-            onDateChange={setSelectedDate}
-            sunPosition={sunPosition}
-          />
-        </Card>
-      </div>
-
       {/* Main Content */}
-      <div className="container mx-auto px-4 pb-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Map/List View */}
           <div className="lg:col-span-2">
@@ -82,6 +47,8 @@ const Index = () => {
                   selectedDate={selectedDate}
                   onTimeChange={setCurrentTime}
                   onDateChange={setSelectedDate}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
               ) : (
                 <VenueList 

@@ -31,19 +31,17 @@ const SunnyVenuesDropdown = ({ sunPosition, currentTime }: SunnyVenuesDropdownPr
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-white/90 backdrop-blur-sm rounded-lg p-3 border border-sun-200 hover:bg-white/95 transition-all duration-200 flex items-center space-x-2"
+        className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-sun-200 hover:bg-white/95 transition-all duration-200 flex items-center space-x-2 text-xs"
       >
-        <div className="text-center">
-          <div className="text-2xl font-bold text-sun-600">
-            {sunnyVenueCount}
-          </div>
-          <div className="text-xs text-gray-600">venues in sun</div>
+        <div className="flex items-center space-x-1">
+          <span className="font-bold text-sun-600">{sunnyVenueCount}</span>
+          <span className="text-gray-600">venues</span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
           <div className="p-3 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">Currently Sunny Venues</h3>
             <p className="text-sm text-gray-600">Venues with direct sunlight right now</p>

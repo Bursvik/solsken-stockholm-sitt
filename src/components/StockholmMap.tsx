@@ -4,6 +4,7 @@ import MapCanvas from './map/MapCanvas';
 import MapControls from './map/MapControls';
 import MapTimeSlider from './map/MapTimeSlider';
 import SunnyVenuesDropdown from './map/SunnyVenuesDropdown';
+import MapViewToggle from './map/MapViewToggle';
 
 interface StockholmMapProps {
   currentTime: Date;
@@ -11,9 +12,19 @@ interface StockholmMapProps {
   selectedDate: Date;
   onTimeChange: (time: Date) => void;
   onDateChange: (date: Date) => void;
+  viewMode: 'map' | 'list';
+  onViewModeChange: (mode: 'map' | 'list') => void;
 }
 
-const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange, onDateChange }: StockholmMapProps) => {
+const StockholmMap = ({ 
+  currentTime, 
+  sunPosition, 
+  selectedDate, 
+  onTimeChange, 
+  onDateChange, 
+  viewMode, 
+  onViewModeChange 
+}: StockholmMapProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [transform, setTransform] = useState({
@@ -83,10 +94,15 @@ const StockholmMap = ({ currentTime, sunPosition, selectedDate, onTimeChange, on
         selectedDate={selectedDate}
         onTimeChange={onTimeChange}
         onDateChange={onDateChange}
+        sunPosition={sunPosition}
       />
 
-      {/* Sunny venues dropdown - positioned at top right */}
-      <div className="absolute top-4 right-4">
+      {/* Top right controls */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <MapViewToggle 
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+        />
         <SunnyVenuesDropdown 
           sunPosition={sunPosition}
           currentTime={currentTime}

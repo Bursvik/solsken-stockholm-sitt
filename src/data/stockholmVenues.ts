@@ -1,5 +1,8 @@
 import { Venue } from '@/types/venue';
 
+// Export the Venue type for other components to use
+export type { Venue };
+
 export const stockholmVenues: Venue[] = [
   {
     id: 1,
@@ -10,7 +13,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.5,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Cozy café in the old town"
+    description: "Cozy café in the old town",
+    address: "Stora Nygatan 11, Gamla Stan",
+    openingHours: "08:00-18:00",
+    priceLevel: "$$"
   },
   {
     id: 2,
@@ -21,7 +27,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.7,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Fine dining with a view"
+    description: "Fine dining with a view",
+    address: "Hantverkargatan 1, Kungsholmen",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 3,
@@ -32,7 +41,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Popular park with sunny spots"
+    description: "Popular park with sunny spots",
+    address: "Södermalm, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 4,
@@ -43,7 +55,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.1,
     sunExposed: false,
     sunHours: [],
-    description: "Trendy bar with indoor seating"
+    description: "Trendy bar with indoor seating",
+    address: "Norrmalmstorg, Stockholm",
+    openingHours: "17:00-01:00",
+    priceLevel: "$$"
   },
   {
     id: 5,
@@ -54,7 +69,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.6,
     sunExposed: true,
     sunHours: ["09:00", "10:00", "11:00", "12:00", "13:00"],
-    description: "Café near the park"
+    description: "Café near the park",
+    address: "Djurgården, Stockholm",
+    openingHours: "09:00-19:00",
+    priceLevel: "$"
   },
   {
     id: 6,
@@ -65,7 +83,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: false,
     sunHours: [],
-    description: "Indoor market with food stalls"
+    description: "Indoor market with food stalls",
+    address: "Östermalmstorg, Stockholm",
+    openingHours: "10:00-20:00",
+    priceLevel: "$$"
   },
   {
     id: 7,
@@ -76,7 +97,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Quiet park with sunny benches"
+    description: "Quiet park with sunny benches",
+    address: "Kungsholmen, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 8,
@@ -87,7 +111,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00"],
-    description: "Bistro with outdoor seating"
+    description: "Bistro with outdoor seating",
+    address: "Vasastan, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$"
   },
   {
     id: 9,
@@ -98,7 +125,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["16:00", "17:00", "18:00"],
-    description: "Bar with terrace"
+    description: "Bar with terrace",
+    address: "Hornstull, Stockholm",
+    openingHours: "17:00-01:00",
+    priceLevel: "$$"
   },
   {
     id: 10,
@@ -109,9 +139,11 @@ export const stockholmVenues: Venue[] = [
     rating: 3.6,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Famous central square"
+    description: "Famous central square",
+    address: "Sergels torg, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
-  // Additional 50+ venues for better coverage
   {
     id: 101,
     name: "Sturekompaniet",
@@ -121,7 +153,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Upscale nightclub and bar"
+    description: "Upscale nightclub and bar",
+    address: "Stureplan, Stockholm",
+    openingHours: "22:00-03:00",
+    priceLevel: "$$$$"
   },
   {
     id: 102,
@@ -132,7 +167,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Famous Stockholm square"
+    description: "Famous Stockholm square",
+    address: "Stureplan, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 103,
@@ -143,7 +181,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "French brasserie"
+    description: "French brasserie",
+    address: "Klarabergsviadukten 90, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 104,
@@ -154,7 +195,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: false,
     sunHours: [],
-    description: "Asian fusion cuisine"
+    description: "Asian fusion cuisine",
+    address: "Sturegatan 15, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 105,
@@ -165,7 +209,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.1,
     sunExposed: false,
     sunHours: [],
-    description: "Exclusive cocktail bar"
+    description: "Exclusive cocktail bar",
+    address: "Kommendörsgatan 21, Stockholm",
+    openingHours: "22:00-03:00",
+    priceLevel: "$$$$"
   },
   {
     id: 106,
@@ -176,7 +223,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.8,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00"],
-    description: "Department store café"
+    description: "Department store café",
+    address: "Hamngatan 18-20, Stockholm",
+    openingHours: "10:00-20:00",
+    priceLevel: "$"
   },
   {
     id: 107,
@@ -187,7 +237,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["14:00", "15:00", "16:00"],
-    description: "Hotel restaurant with terrace"
+    description: "Hotel restaurant with terrace",
+    address: "Drottninggatan 71A, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 108,
@@ -198,7 +251,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.5,
     sunExposed: false,
     sunHours: [],
-    description: "Historic food market"
+    description: "Historic food market",
+    address: "Östermalmstorg 1, Stockholm",
+    openingHours: "10:00-20:00",
+    priceLevel: "$$"
   },
   {
     id: 109,
@@ -209,7 +265,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["13:00", "14:00", "15:00", "16:00"],
-    description: "Shopping district square"
+    description: "Shopping district square",
+    address: "Biblioteksgatan, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 110,
@@ -220,7 +279,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00"],
-    description: "Classic Stockholm brasserie"
+    description: "Classic Stockholm brasserie",
+    address: "Kålsängsgränd 1, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 111,
@@ -231,7 +293,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00"],
-    description: "Royal Dramatic Theatre café"
+    description: "Royal Dramatic Theatre café",
+    address: "Nybroplan, Stockholm",
+    openingHours: "10:00-20:00",
+    priceLevel: "$"
   },
   {
     id: 112,
@@ -242,7 +307,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.6,
     sunExposed: true,
     sunHours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
-    description: "Beautiful central park"
+    description: "Beautiful central park",
+    address: "Humlegården, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 113,
@@ -253,7 +321,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Italian restaurant"
+    description: "Italian restaurant",
+    address: "Strandvägen 7A, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 114,
@@ -264,7 +335,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: true,
     sunHours: ["09:00", "10:00", "11:00", "12:00"],
-    description: "Famous for huge cinnamon buns"
+    description: "Famous for huge cinnamon buns",
+    address: "Saturnusgatan 1, Stockholm",
+    openingHours: "08:00-18:00",
+    priceLevel: "$"
   },
   {
     id: 115,
@@ -275,7 +349,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Popular neighborhood park"
+    description: "Popular neighborhood park",
+    address: "Vasaparken, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 116,
@@ -286,7 +363,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "City Hall restaurant"
+    description: "City Hall restaurant",
+    address: "Hantverkargatan 1, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 117,
@@ -297,7 +377,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
-    description: "Urban beach area"
+    description: "Urban beach area",
+    address: "Kungsholmen, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 118,
@@ -308,7 +391,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.5,
     sunExposed: false,
     sunHours: [],
-    description: "Modern Nordic cuisine"
+    description: "Modern Nordic cuisine",
+    address: "Norrlandsgatan 24, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 119,
@@ -319,7 +405,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00"],
-    description: "Cozy neighborhood café"
+    description: "Cozy neighborhood café",
+    address: "Folkungagatan 47, Stockholm",
+    openingHours: "08:00-18:00",
+    priceLevel: "$"
   },
   {
     id: 120,
@@ -330,7 +419,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Södermalm central square"
+    description: "Södermalm central square",
+    address: "Mariatorget, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 121,
@@ -341,7 +433,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Vegetarian with great views"
+    description: "Vegetarian with great views",
+    address: "Fjällgatan 23B, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 122,
@@ -352,7 +447,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.7,
     sunExposed: true,
     sunHours: ["14:00", "15:00", "16:00", "17:00", "18:00"],
-    description: "Famous viewpoint walkway"
+    description: "Famous viewpoint walkway",
+    address: "Monteliusvägen, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 123,
@@ -363,7 +461,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["13:00", "14:00", "15:00", "16:00"],
-    description: "Museum restaurant"
+    description: "Museum restaurant",
+    address: "Stadsgårdshamnen 22, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 124,
@@ -374,7 +475,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00"],
-    description: "Deli and café"
+    description: "Deli and café",
+    address: "Sveavägen 44, Stockholm",
+    openingHours: "08:00-20:00",
+    priceLevel: "$"
   },
   {
     id: 125,
@@ -385,7 +489,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.1,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Observatory hill park"
+    description: "Observatory hill park",
+    address: "Observatoriegatan 1, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 126,
@@ -396,7 +503,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00"],
-    description: "Hotel café in Södermalm"
+    description: "Hotel café in Södermalm",
+    address: "Hälsingegatan 40, Stockholm",
+    openingHours: "08:00-18:00",
+    priceLevel: "$"
   },
   {
     id: 127,
@@ -407,7 +517,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["16:00", "17:00", "18:00"],
-    description: "Restaurant with panoramic views"
+    description: "Restaurant with panoramic views",
+    address: "Slussen, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 128,
@@ -418,7 +531,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.5,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
-    description: "Large park with activities"
+    description: "Large park with activities",
+    address: "Tantolunden, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 129,
@@ -429,7 +545,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["13:00", "14:00", "15:00", "16:00", "17:00"],
-    description: "Waterfront promenade"
+    description: "Waterfront promenade",
+    address: "Hornstull, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 130,
@@ -440,7 +559,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.6,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Garden café on Djurgården"
+    description: "Garden café on Djurgården",
+    address: "Rosendalsvägen 38, Stockholm",
+    openingHours: "09:00-19:00",
+    priceLevel: "$"
   },
   {
     id: 131,
@@ -451,7 +573,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.1,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Open-air museum restaurant"
+    description: "Open-air museum restaurant",
+    address: "Djurgårdsslätten 49, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 132,
@@ -462,7 +587,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00"],
-    description: "Art museum café"
+    description: "Art museum café",
+    address: "Waldemarsudde, Stockholm",
+    openingHours: "10:00-18:00",
+    priceLevel: "$"
   },
   {
     id: 133,
@@ -473,7 +601,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Traditional Swedish restaurant"
+    description: "Traditional Swedish restaurant",
+    address: "Djurgården, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$"
   },
   {
     id: 134,
@@ -484,7 +615,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.4,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Fine dining on Djurgården"
+    description: "Fine dining on Djurgården",
+    address: "Djurgården, Stockholm",
+    openingHours: "11:00-22:00",
+    priceLevel: "$$$$"
   },
   {
     id: 135,
@@ -495,7 +629,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.8,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Amusement park café"
+    description: "Amusement park café",
+    address: "Djurgården, Stockholm",
+    openingHours: "10:00-19:00",
+    priceLevel: "$"
   },
   {
     id: 136,
@@ -506,7 +643,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Island beach area"
+    description: "Island beach area",
+    address: "Djurgården, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "Free"
   },
   {
     id: 137,
@@ -517,7 +657,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.8,
     sunExposed: false,
     sunHours: [],
-    description: "Michelin-starred restaurant"
+    description: "Michelin-starred restaurant",
+    address: "Oaxen, Stockholm",
+    openingHours: "12:00-22:00",
+    priceLevel: "$$$$"
   },
   {
     id: 138,
@@ -528,7 +671,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["16:00", "17:00", "18:00"],
-    description: "Museum bar with terrace"
+    description: "Museum bar with terrace",
+    address: "Djurgården, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$"
   },
   {
     id: 139,
@@ -539,7 +685,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00"],
-    description: "Waterfront café"
+    description: "Waterfront café",
+    address: "Blasieholmsgatan 4, Stockholm",
+    openingHours: "08:00-18:00",
+    priceLevel: "$"
   },
   {
     id: 140,
@@ -550,7 +699,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.5,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Luxury hotel terrace"
+    description: "Luxury hotel terrace",
+    address: "Södra Blasieholmshamnen 8, Stockholm",
+    openingHours: "11:00-23:00",
+    priceLevel: "$$$$"
   },
   {
     id: 141,
@@ -561,7 +713,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.9,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00"],
-    description: "Harbor café"
+    description: "Harbor café",
+    address: "Strandvägen, Stockholm",
+    openingHours: "09:00-19:00",
+    priceLevel: "$"
   },
   {
     id: 142,
@@ -572,7 +727,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00", "16:00"],
-    description: "Central square and transport hub"
+    description: "Central square and transport hub",
+    address: "Nybroplan, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 143,
@@ -583,7 +741,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.2,
     sunExposed: true,
     sunHours: ["11:00", "12:00", "13:00", "14:00", "15:00"],
-    description: "Small central park"
+    description: "Small central park",
+    address: "Berzelii Park, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 144,
@@ -594,7 +755,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.3,
     sunExposed: false,
     sunHours: [],
-    description: "Historic venue and restaurant"
+    description: "Historic venue and restaurant",
+    address: "Norrmalmstorg 2, Stockholm",
+    openingHours: "17:00-01:00",
+    priceLevel: "$$$$"
   },
   {
     id: 145,
@@ -605,7 +769,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.8,
     sunExposed: true,
     sunHours: ["13:00", "14:00", "15:00", "16:00"],
-    description: "Transport hub square"
+    description: "Transport hub square",
+    address: "Tegelbacken, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 146,
@@ -616,7 +783,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.5,
     sunExposed: false,
     sunHours: [],
-    description: "Central station food court"
+    description: "Central station food court",
+    address: "T-Centralen, Stockholm",
+    openingHours: "06:00-22:00",
+    priceLevel: "$"
   },
   {
     id: 147,
@@ -627,7 +797,10 @@ export const stockholmVenues: Venue[] = [
     rating: 3.6,
     sunExposed: true,
     sunHours: ["12:00", "13:00", "14:00", "15:00"],
-    description: "Famous central square"
+    description: "Famous central square",
+    address: "Sergels torg, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 148,
@@ -638,7 +811,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: false,
     sunHours: [],
-    description: "Cultural center café"
+    description: "Cultural center café",
+    address: "Torsgatan 19, Stockholm",
+    openingHours: "10:00-20:00",
+    priceLevel: "$"
   },
   {
     id: 149,
@@ -649,7 +825,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.1,
     sunExposed: true,
     sunHours: ["10:00", "11:00", "12:00", "13:00", "14:00"],
-    description: "Market square"
+    description: "Market square",
+    address: "Hötorget, Stockholm",
+    openingHours: "Open 24 hours",
+    priceLevel: "Free"
   },
   {
     id: 150,
@@ -660,7 +839,10 @@ export const stockholmVenues: Venue[] = [
     rating: 4.0,
     sunExposed: false,
     sunHours: [],
-    description: "Nightclub near Royal Opera"
+    description: "Nightclub near Royal Opera",
+    address: "Karl XII:s torg, Stockholm",
+    openingHours: "22:00-03:00",
+    priceLevel: "$$$$"
   }
 ];
 

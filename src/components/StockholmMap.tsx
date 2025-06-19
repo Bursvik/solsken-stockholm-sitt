@@ -81,15 +81,15 @@ const StockholmMap = ({ currentTime, sunPosition }: StockholmMapProps) => {
   const drawShadows = (ctx: CanvasRenderingContext2D, sunPos: SunPosition, width: number, height: number, currentTime: Date) => {
     const hour = currentTime.getHours();
     
-    // Check if it's actually nighttime (before 6 AM or after 9 PM) or if sun is very low
-    if (hour < 6 || hour > 21 || sunPos.elevation < -6) {
+    // Only apply nighttime overlay during actual night hours (before 6 AM or after 9 PM)
+    if (hour < 6 || hour > 21) {
       // Night time - draw dark overlay
       ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
       ctx.fillRect(0, 0, width, height);
       return;
     }
 
-    // During daylight hours, only draw building shadows if sun is above horizon
+    // During daylight hours (6 AM to 9 PM), always draw building shadows if sun is above horizon
     if (sunPos.elevation > 0) {
       // Calculate shadow directions based on sun azimuth
       const shadowAngle = (sunPos.azimuth - 180) * Math.PI / 180; // Opposite direction of sun

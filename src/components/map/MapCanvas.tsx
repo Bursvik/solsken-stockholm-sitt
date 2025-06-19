@@ -1,10 +1,11 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import { drawDetailedMap } from './mapRendering/mapRenderer';
 import { drawShadows } from './mapRendering/shadowRenderer';
-import { drawVenues } from './mapRendering/venueRenderer';
+import { drawVenues, getVenueAtPosition } from './mapRendering/venueRenderer';
 import { drawSunIndicator } from './mapRendering/sunRenderer';
+import VenueTooltip from './VenueTooltip';
 
 interface MapCanvasProps {
   currentTime: Date;
@@ -32,6 +33,32 @@ const MapCanvas = ({
   isDragging
 }: MapCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [hoveredVenue, setHoveredVenue] = useState<any>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Account for transform when checking venue positions
+    const adjustedX = (mouseX - transform.translateX) / transform.scale;
+    const adjustedY = (mouseY - transform.translateY) / transform.scale;
+    
+    const venue = getVenueAtPosition(adjustedX, adjustedY, canvas.offsetWidth, canvas.offsetHeight);
+    setHoveredVenue(venue);
+    setMousePosition({ x: e.clientX, y: e.clientY });
+    
+    onMouseMove(e);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredVenue(null);
+    onMouseLeave();
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,19 +90,27 @@ const MapCanvas = ({
   }, [currentTime, sunPosition, transform]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full"
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseLeave}
-    />
+    <div className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          cursor: isDragging ? 'grabbing' : hoveredVenue ? 'pointer' : 'grab'
+        }}
+        onMouseDown={onMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={handleMouseLeave}
+      />
+      
+      <VenueTooltip
+        venue={hoveredVenue}
+        x={mousePosition.x}
+        y={mousePosition.y}
+      />
+    </div>
   );
 };
 

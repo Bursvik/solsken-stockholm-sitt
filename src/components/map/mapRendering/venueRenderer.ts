@@ -52,6 +52,19 @@ export const drawVenues = (ctx: CanvasRenderingContext2D, width: number, height:
   });
 };
 
+export const getVenueAtPosition = (mouseX: number, mouseY: number, width: number, height: number) => {
+  for (const venue of stockholmVenues) {
+    const x = ((venue.lng - 18.0686) * 4000) + width * 0.5;
+    const y = height * 0.5 - ((venue.lat - 59.3293) * 4000);
+    
+    const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+    if (distance <= 10) { // 10px hover radius
+      return venue;
+    }
+  }
+  return null;
+};
+
 export const getSunnyVenueCount = (sunPos: SunPosition) => {
   return stockholmVenues.filter(v => sunPos.elevation > 0 && v.sunExposed).length;
 };

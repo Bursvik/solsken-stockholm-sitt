@@ -19,30 +19,66 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [styleLoaded, setStyleLoaded] = useState(false);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [18.0686, 59.3293], // Stockholm coordinates
-      zoom: 12,
-      pitch: 45,
-      bearing: 0,
-      antialias: true
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [18.0686, 59.3293],
+        zoom: 12,
+        pitch: 45,
+        bearing: 0,
+        antialias: true
+      });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
 
-    map.current.on('load', () => {
-      if (!map.current) return;
-      
+      // Wait for both style and data to load
+      map.current.on('style.load', () => {
+        console.log('Map style loaded');
+        setStyleLoaded(true);
+      });
+
+      map.current.on('load', () => {
+        console.log('Map fully loaded');
+        setMapLoaded(true);
+      });
+
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+      });
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  // Add 3D buildings when style is loaded
+  useEffect(() => {
+    if (!map.current || !styleLoaded) return;
+
+    try {
+      // Check if layer already exists
+      if (map.current.getLayer('3d-buildings')) {
+        map.current.removeLayer('3d-buildings');
+      }
+
       // Add 3D buildings layer with shadows
       map.current.addLayer({
         id: '3d-buildings',
@@ -83,80 +119,74 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       });
 
       // Add shadow layer for ground shadows
-      map.current.addLayer({
-        id: 'building-shadows',
-        source: 'composite',
-        'source-layer': 'building',
-        filter: ['==', 'extrude', 'true'],
-        type: 'fill',
-        minzoom: 10,
-        paint: {
-          'fill-color': 'rgba(0, 0, 0, 0.3)',
-          'fill-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            10,
-            0,
-            14,
-            0.6
-          ],
-          'fill-translate': [10, 10],
-          'fill-translate-anchor': 'viewport'
-        }
-      }, '3d-buildings');
+      if (!map.current.getLayer('building-shadows')) {
+        map.current.addLayer({
+          id: 'building-shadows',
+          source: 'composite',
+          'source-layer': 'building',
+          filter: ['==', 'extrude', 'true'],
+          type: 'fill',
+          minzoom: 10,
+          paint: {
+            'fill-color': 'rgba(0, 0, 0, 0.3)',
+            'fill-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10,
+              0,
+              14,
+              0.6
+            ],
+            'fill-translate': [10, 10],
+            'fill-translate-anchor': 'viewport'
+          }
+        }, '3d-buildings');
+      }
 
-      setMapLoaded(true);
-    });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, []);
+    } catch (error) {
+      console.error('Error adding 3D buildings:', error);
+    }
+  }, [styleLoaded]);
 
   // Update sun lighting and shadows based on sun position
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current || !styleLoaded || !map.current.getLayer('3d-buildings')) return;
 
-    // Calculate shadow direction based on sun position
-    const shadowOffsetX = Math.cos((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
-    const shadowOffsetY = Math.sin((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
+    try {
+      // Calculate shadow direction based on sun position
+      const shadowOffsetX = Math.cos((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
+      const shadowOffsetY = Math.sin((sunPosition.azimuth - 90) * Math.PI / 180) * (90 - sunPosition.elevation) * 0.5;
 
-    // Update building colors based on sun position and time of day
-    const isDay = sunPosition.elevation > 0;
-    const buildingColor = isDay 
-      ? `hsl(${200 + sunPosition.elevation * 0.5}, 15%, ${85 - sunPosition.elevation * 0.2}%)`
-      : '#4a5568';
+      // Update building colors based on sun position and time of day
+      const isDay = sunPosition.elevation > 0;
+      const buildingColor = isDay 
+        ? `hsl(${200 + sunPosition.elevation * 0.5}, 15%, ${85 - sunPosition.elevation * 0.2}%)`
+        : '#4a5568';
 
-    // Update 3D buildings
-    map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
-      'interpolate',
-      ['linear'],
-      ['get', 'height'],
-      0,
-      buildingColor,
-      200,
-      isDay ? '#e2e8f0' : '#2d3748'
-    ]);
+      // Update 3D buildings
+      map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
+        'interpolate',
+        ['linear'],
+        ['get', 'height'],
+        0,
+        buildingColor,
+        200,
+        isDay ? '#e2e8f0' : '#2d3748'
+      ]);
 
-    // Update shadow position and opacity based on sun elevation
-    const shadowOpacity = isDay ? Math.max(0.1, (90 - sunPosition.elevation) / 90 * 0.4) : 0;
-    
-    map.current.setPaintProperty('building-shadows', 'fill-opacity', shadowOpacity);
-    map.current.setPaintProperty('building-shadows', 'fill-translate', [shadowOffsetX, shadowOffsetY]);
+      // Update shadow position and opacity based on sun elevation
+      const shadowOpacity = isDay ? Math.max(0.1, (90 - sunPosition.elevation) / 90 * 0.4) : 0;
+      
+      if (map.current.getLayer('building-shadows')) {
+        map.current.setPaintProperty('building-shadows', 'fill-opacity', shadowOpacity);
+        map.current.setPaintProperty('building-shadows', 'fill-translate', [shadowOffsetX, shadowOffsetY]);
+      }
 
-    // Adjust map style for day/night
-    if (sunPosition.elevation <= -6) {
-      // Night time - darker style
-      map.current.setStyle('mapbox://styles/mapbox/dark-v11');
-    } else if (sunPosition.elevation <= 6) {
-      // Dawn/dusk - navigation style
-      map.current.setStyle('mapbox://styles/mapbox/navigation-day-v1');
-    } else {
-      // Day time - light style
-      map.current.setStyle('mapbox://styles/mapbox/light-v11');
+    } catch (error) {
+      console.error('Error updating sun lighting:', error);
     }
-  }, [sunPosition, mapLoaded]);
+  }, [sunPosition, styleLoaded]);
 
   // Update venue markers
   useEffect(() => {
@@ -220,6 +250,16 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
+      
+      {/* Loading indicator */}
+      {!mapLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-gray-600">Loading Stockholm map...</p>
+          </div>
+        </div>
+      )}
       
       {/* Sun indicator overlay */}
       {sunPosition.elevation > 0 && (

@@ -7,6 +7,7 @@ import SunnyVenuesDropdown from './map/SunnyVenuesDropdown';
 import MapViewToggle from './map/MapViewToggle';
 import MapFilters from './map/MapFilters';
 import VenueTooltip from './map/VenueTooltip';
+import ErrorBoundary from './ErrorBoundary';
 
 interface StockholmMapProps {
   currentTime: Date;
@@ -40,46 +41,48 @@ const StockholmMap = ({
   };
 
   return (
-    <div className="relative w-full h-full" onMouseMove={handleMouseMove}>
-      <MapboxMap
-        currentTime={currentTime}
-        sunPosition={sunPosition}
-        filter={filter}
-        onVenueHover={handleVenueHover}
-      />
-
-      <MapTimeSlider
-        currentTime={currentTime}
-        selectedDate={selectedDate}
-        onTimeChange={onTimeChange}
-        onDateChange={onDateChange}
-        sunPosition={sunPosition}
-      />
-
-      {/* Map Filters */}
-      <MapFilters
-        filter={filter}
-        onFilterChange={setFilter}
-      />
-
-      {/* Top right controls - Map/List toggle and Sunny venues dropdown */}
-      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
-        <MapViewToggle 
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-        />
-        <SunnyVenuesDropdown 
-          sunPosition={sunPosition}
+    <ErrorBoundary>
+      <div className="relative w-full h-full" onMouseMove={handleMouseMove}>
+        <MapboxMap
           currentTime={currentTime}
+          sunPosition={sunPosition}
+          filter={filter}
+          onVenueHover={handleVenueHover}
+        />
+
+        <MapTimeSlider
+          currentTime={currentTime}
+          selectedDate={selectedDate}
+          onTimeChange={onTimeChange}
+          onDateChange={onDateChange}
+          sunPosition={sunPosition}
+        />
+
+        {/* Map Filters */}
+        <MapFilters
+          filter={filter}
+          onFilterChange={setFilter}
+        />
+
+        {/* Top right controls - Map/List toggle and Sunny venues dropdown */}
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+          <MapViewToggle 
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
+          <SunnyVenuesDropdown 
+            sunPosition={sunPosition}
+            currentTime={currentTime}
+          />
+        </div>
+
+        <VenueTooltip
+          venue={hoveredVenue}
+          x={mousePosition.x}
+          y={mousePosition.y}
         />
       </div>
-
-      <VenueTooltip
-        venue={hoveredVenue}
-        x={mousePosition.x}
-        y={mousePosition.y}
-      />
-    </div>
+    </ErrorBoundary>
   );
 };
 

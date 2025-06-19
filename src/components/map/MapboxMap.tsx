@@ -87,17 +87,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Convert sun position to Mapbox light direction
-    const sunAzimuthRadians = (sunPosition.azimuth - 90) * Math.PI / 180;
-    const sunElevationRadians = sunPosition.elevation * Math.PI / 180;
-    
-    // Calculate light direction vector
-    const lightDirection = [
-      Math.cos(sunElevationRadians) * Math.cos(sunAzimuthRadians),
-      Math.cos(sunElevationRadians) * Math.sin(sunAzimuthRadians),
-      Math.sin(sunElevationRadians)
-    ];
-
     // Update building colors based on sun position
     const buildingColor = sunPosition.elevation > 0 
       ? `hsl(${30 + sunPosition.elevation}, 20%, ${60 + sunPosition.elevation * 0.3}%)`

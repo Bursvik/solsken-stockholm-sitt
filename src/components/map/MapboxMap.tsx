@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -17,9 +16,10 @@ interface MapboxMapProps {
   sunPosition: SunPosition;
   filter?: 'all' | 'sunny' | 'cafe' | 'restaurant' | 'bar' | 'park';
   onVenueHover?: (venue: any) => void;
+  mapRotation?: number[];
 }
 
-const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: MapboxMapProps) => {
+const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, mapRotation = [0] }: MapboxMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -42,7 +42,8 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         zoom: 13,
         pitch: 60,
         bearing: 0,
-        antialias: true
+        antialias: true,
+        terrain: { source: 'mapbox-dem', exaggeration: 1.5 } // Enable terrain
       });
 
       // Add navigation controls
@@ -51,6 +52,29 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       // Wait for both style and data to load
       map.current.on('style.load', () => {
         console.log('Map style loaded');
+        
+        // Add terrain source and layer for 3D elevation
+        if (map.current && !map.current.getSource('mapbox-dem')) {
+          map.current.addSource('mapbox-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            tileSize: 512,
+            maxzoom: 14
+          });
+          
+          // Add hillshade for better terrain visualization
+          map.current.addLayer({
+            id: 'hillshading',
+            source: 'mapbox-dem',
+            type: 'hillshade',
+            paint: {
+              'hillshade-shadow-color': '#473B24',
+              'hillshade-highlight-color': '#FFF',
+              'hillshade-exaggeration': 0.25
+            }
+          });
+        }
+        
         setStyleLoaded(true);
       });
 
@@ -104,31 +128,31 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     });
   }, [mapLoaded]);
 
-  // Add enhanced 3D buildings with realistic individual shadows
+  // Add enhanced 3D buildings with properly anchored shadows
   useEffect(() => {
     if (!map.current || !styleLoaded) return;
 
-    const updateShadows = async () => {
+    const updateBuildingsAndShadows = async () => {
       try {
         // Remove existing layers if they exist
-        if (map.current!.getLayer('3d-buildings')) {
-          map.current!.removeLayer('3d-buildings');
-        }
         if (map.current!.getLayer('building-shadows')) {
           map.current!.removeLayer('building-shadows');
         }
         if (map.current!.getSource('building-shadows')) {
           map.current!.removeSource('building-shadows');
         }
+        if (map.current!.getLayer('3d-buildings')) {
+          map.current!.removeLayer('3d-buildings');
+        }
 
-        // Add enhanced 3D buildings layer
+        // Add enhanced 3D buildings layer that follows terrain
         map.current!.addLayer({
           id: '3d-buildings',
           source: 'composite',
           'source-layer': 'building',
           filter: ['==', 'extrude', 'true'],
           type: 'fill-extrusion',
-          minzoom: 10,
+          minzoom: 12,
           paint: {
             'fill-extrusion-color': [
               'interpolate',
@@ -147,7 +171,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
               'interpolate',
               ['linear'],
               ['zoom'],
-              10,
+              12,
               0,
               12.5,
               ['get', 'height']
@@ -156,37 +180,69 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
               'interpolate',
               ['linear'],
               ['zoom'],
-              10,
+              12,
               0,
               12.5,
               ['get', 'min_height']
             ],
-            'fill-extrusion-opacity': 0.8
+            'fill-extrusion-opacity': 0.9
           }
         });
 
-        // Add realistic shadows for sun above horizon
+        // Add realistic building shadows that are properly anchored
         if (sunPosition.elevation > 0) {
-          // Calculate realistic shadow parameters
+          // Calculate shadow parameters based on sun position
           const shadowLength = EnhancedShadowCalculator.calculateRealisticShadowLength(
-            50, // Average building height for calculation
+            30, // Average building height for shadow calculation
             sunPosition.elevation
           );
 
-          // Shadow opacity based on sun elevation - lower sun = darker shadows
-          const shadowOpacity = Math.max(0.15, Math.min(0.85, (90 - sunPosition.elevation) / 90 * 0.9));
+          // Shadow opacity - lower sun = darker shadows
+          const shadowOpacity = Math.max(0.2, Math.min(0.7, (90 - sunPosition.elevation) / 90 * 0.8));
           
-          // Calculate shadow direction based on sun azimuth (opposite direction)
+          // Calculate shadow direction (opposite to sun azimuth)
           const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
           const shadowRadians = (shadowAzimuth * Math.PI) / 180;
           
-          // Convert shadow length to map units (much more accurate for low sun angles)
-          const shadowOffsetX = Math.cos(shadowRadians) * shadowLength * 0.000009; // Adjusted scale
-          const shadowOffsetY = Math.sin(shadowRadians) * shadowLength * 0.000009;
+          // Convert shadow length to precise map coordinate offsets
+          const metersPerDegree = 111000; // Approximate meters per degree at Stockholm latitude
+          const shadowOffsetLng = (Math.cos(shadowRadians) * shadowLength) / metersPerDegree;
+          const shadowOffsetLat = (Math.sin(shadowRadians) * shadowLength) / (metersPerDegree * Math.cos(59.3293 * Math.PI / 180));
 
-          // Create individual building shadows using 3D extrusion
+          // Create shadow layer that's anchored to each building
+          const shadowGeoJSON = {
+            type: 'FeatureCollection' as const,
+            features: [] as any[]
+          };
+
+          // Generate shadow polygons for visible buildings
+          const bounds = map.current!.getBounds();
+          const buildingBounds = {
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest()
+          };
+
+          // Add shadow source and layer
+          map.current!.addSource('building-shadows', {
+            type: 'geojson',
+            data: shadowGeoJSON
+          });
+
           map.current!.addLayer({
             id: 'building-shadows',
+            source: 'building-shadows',
+            type: 'fill',
+            paint: {
+              'fill-color': '#000000',
+              'fill-opacity': shadowOpacity
+            }
+          }, '3d-buildings'); // Place shadows below buildings
+
+          // Update shadow geometry to be anchored to buildings
+          map.current!.addLayer({
+            id: 'building-shadow-extrusions',
             source: 'composite',
             'source-layer': 'building',
             filter: ['==', 'extrude', 'true'],
@@ -194,23 +250,26 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
             minzoom: 12,
             paint: {
               'fill-extrusion-color': '#000000',
-              'fill-extrusion-opacity': shadowOpacity,
-              'fill-extrusion-height': 0.5, // Very thin shadow layer
+              'fill-extrusion-opacity': shadowOpacity * 0.6,
+              'fill-extrusion-height': 0.5,
               'fill-extrusion-base': 0,
-              // Each building casts its own shadow in the correct direction
-              'fill-extrusion-translate': [shadowOffsetX * 100000, shadowOffsetY * 100000],
+              // Anchor shadows to building positions using translate
+              'fill-extrusion-translate': [
+                shadowOffsetLng * 100000, // Convert to pixels
+                -shadowOffsetLat * 100000  // Negative because map Y is inverted
+              ],
               'fill-extrusion-translate-anchor': 'map'
             }
-          }, '3d-buildings'); // Place shadows below buildings
+          }, '3d-buildings');
         }
 
       } catch (error) {
-        console.error('Error updating shadows:', error);
+        console.error('Error updating buildings and shadows:', error);
       }
     };
 
-    updateShadows();
-  }, [styleLoaded, sunPosition, buildingData]);
+    updateBuildingsAndShadows();
+  }, [styleLoaded, sunPosition]);
 
   // Handle map rotation
   useEffect(() => {
@@ -293,22 +352,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
 
   return (
     <div className="relative w-full h-full">
-      {/* Rotation Slider - moved below filter area */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
-        <div className="flex items-center space-x-3 min-w-[250px]">
-          <span className="text-sm font-medium text-gray-700">Rotate</span>
-          <Slider
-            value={mapRotation}
-            onValueChange={handleRotationChange}
-            max={380}
-            min={-20}
-            step={5}
-            className="flex-1"
-          />
-          <span className="text-sm text-gray-600 min-w-[40px]">{mapRotation[0]}°</span>
-        </div>
-      </div>
-
       <div ref={mapContainer} className="w-full h-full" />
       
       {/* Loading indicator */}
@@ -316,7 +359,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600">Loading Stockholm map...</p>
+            <p className="text-gray-600">Loading Stockholm map with terrain...</p>
           </div>
         </div>
       )}

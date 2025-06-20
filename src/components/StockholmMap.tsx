@@ -30,6 +30,7 @@ const StockholmMap = ({
   const [filter, setFilter] = useState<'all' | 'sunny' | 'cafe' | 'restaurant' | 'bar' | 'park'>('all');
   const [hoveredVenue, setHoveredVenue] = useState<any>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mapRotation, setMapRotation] = useState([0]);
 
   const handleVenueHover = (venue: any) => {
     setHoveredVenue(venue);
@@ -37,6 +38,10 @@ const StockholmMap = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleRotationChange = (value: number[]) => {
+    setMapRotation(value);
   };
 
   return (
@@ -47,6 +52,7 @@ const StockholmMap = ({
           sunPosition={sunPosition}
           filter={filter}
           onVenueHover={handleVenueHover}
+          mapRotation={mapRotation}
         />
 
         <MapTimeSlider
@@ -57,10 +63,12 @@ const StockholmMap = ({
           sunPosition={sunPosition}
         />
 
-        {/* Map Filters */}
+        {/* Map Filters with Rotation Control */}
         <MapFilters
           filter={filter}
           onFilterChange={setFilter}
+          mapRotation={mapRotation}
+          onRotationChange={handleRotationChange}
         />
 
         {/* Top right controls - Map/List toggle only */}

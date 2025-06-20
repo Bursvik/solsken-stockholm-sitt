@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapboxMap from './map/MapboxMap';
 import MapTimeSlider from './map/MapTimeSlider';
-import SunnyVenuesDropdown from './map/SunnyVenuesDropdown';
 import MapViewToggle from './map/MapViewToggle';
 import MapFilters from './map/MapFilters';
 import VenueTooltip from './map/VenueTooltip';
@@ -64,15 +63,11 @@ const StockholmMap = ({
           onFilterChange={setFilter}
         />
 
-        {/* Top right controls - Map/List toggle and Sunny venues dropdown */}
-        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+        {/* Top right controls - Map/List toggle only */}
+        <div className="absolute top-4 right-4">
           <MapViewToggle 
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
-          />
-          <SunnyVenuesDropdown 
-            sunPosition={sunPosition}
-            currentTime={currentTime}
           />
         </div>
 

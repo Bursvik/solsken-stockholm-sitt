@@ -20,13 +20,13 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-sky">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         {/* Header */}
-        <div className="bg-white/90 backdrop-blur-sm border-b border-sun-200 sticky top-0 z-50">
+        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full gradient-sun sun-glow flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
                   <span className="text-white text-sm">☀</span>
                 </div>
                 <div>
@@ -45,7 +45,7 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Map/List View - takes up 3 columns */}
             <div className="lg:col-span-3">
-              <Card className="h-[600px] overflow-hidden bg-white/90 backdrop-blur-sm border-sun-200">
+              <Card className="h-[600px] overflow-hidden bg-white/90 backdrop-blur-sm border-gray-200">
                 {viewMode === 'map' ? (
                   <StockholmMap 
                     currentTime={currentTime}
@@ -69,9 +69,9 @@ const Index = () => {
 
             {/* Info Panel - takes up 1 column */}
             <div className="space-y-4">
-              <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
+              <Card className="p-6 bg-white/90 backdrop-blur-sm border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900">Current Venues</h3>
-                <div className="text-2xl font-bold text-sun-600 mb-2">
+                <div className="text-2xl font-bold text-orange-600 mb-2">
                   {sunnyVenues.length} sunny
                 </div>
                 <p className="text-sm text-gray-600 mb-4">

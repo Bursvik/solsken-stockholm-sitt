@@ -71,7 +71,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     };
   }, []);
 
-  // Add enhanced 3D buildings with individual shadow sources
+  // Add enhanced 3D buildings with individual shadows for each building
   useEffect(() => {
     if (!map.current || !styleLoaded) return;
 
@@ -127,29 +127,27 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
             12.5,
             ['get', 'min_height']
           ],
-          'fill-extrusion-opacity': 0.8,
-          'fill-extrusion-ambient-occlusion-intensity': 0.4,
-          'fill-extrusion-ambient-occlusion-radius': 3.0
+          'fill-extrusion-opacity': 0.8
         }
       });
 
-      // Add individual building shadows that are attached to each building
+      // Add individual building shadows that follow the sun position exactly
       if (sunPosition.elevation > 5) {
-        const shadowOpacity = Math.max(0.2, Math.min(0.7, (90 - sunPosition.elevation) / 90 * 0.8));
+        const shadowOpacity = Math.max(0.3, Math.min(0.8, (90 - sunPosition.elevation) / 90 * 0.9));
         
-        // Calculate shadow offset based on sun position
-        const sunAzimuthMath = (90 - sunPosition.azimuth + 360) % 360;
-        const sunAzimuthRadians = (sunAzimuthMath * Math.PI) / 180;
-        const shadowAzimuthRadians = sunAzimuthRadians + Math.PI;
+        // Calculate shadow direction based on sun azimuth (opposite direction)
+        const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
+        const shadowRadians = (shadowAzimuth * Math.PI) / 180;
         
-        // Shadow length calculation based on sun elevation
-        const baseShadowLength = sunPosition.elevation > 0 ? 
-          Math.max(5, 50 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
+        // Shadow length based on sun elevation - lower sun = longer shadows
+        const shadowLength = sunPosition.elevation > 0 ? 
+          Math.max(10, 100 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
         
-        const shadowOffsetX = Math.cos(shadowAzimuthRadians) * baseShadowLength;
-        const shadowOffsetY = Math.sin(shadowAzimuthRadians) * baseShadowLength;
+        // Calculate shadow offset in meters (geographic projection)
+        const shadowOffsetX = Math.cos(shadowRadians) * shadowLength * 0.00001; // Convert to degrees
+        const shadowOffsetY = Math.sin(shadowRadians) * shadowLength * 0.00001;
 
-        // Create individual shadow layer for each building
+        // Create individual shadows attached to each building's geometry
         map.current.addLayer({
           id: 'building-shadows',
           source: 'composite',
@@ -158,23 +156,15 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
           type: 'fill-extrusion',
           minzoom: 12,
           paint: {
-            'fill-extrusion-color': 'rgba(0, 0, 0, 0.6)',
-            'fill-extrusion-opacity': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              12,
-              0,
-              16,
-              shadowOpacity
-            ],
-            'fill-extrusion-height': 0.5,
+            'fill-extrusion-color': '#000000',
+            'fill-extrusion-opacity': shadowOpacity,
+            'fill-extrusion-height': 1, // Flat shadow on ground
             'fill-extrusion-base': 0,
-            // Translate each building's shadow individually
-            'fill-extrusion-translate': [shadowOffsetX, shadowOffsetY],
-            'fill-extrusion-translate-anchor': 'map'
+            // Individual shadow positioning for each building polygon
+            'fill-extrusion-translate': [shadowOffsetX * 10000, shadowOffsetY * 10000], // Scale for visibility
+            'fill-extrusion-translate-anchor': 'map' // Shadows stay fixed to map coordinates
           }
-        }, '3d-buildings');
+        }, '3d-buildings'); // Place shadows below buildings
       }
 
     } catch (error) {
@@ -188,7 +178,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     map.current.setBearing(mapRotation[0]);
   }, [mapRotation]);
 
-  // Update venue markers with fixed positioning
+  // Update venue markers with precise geographic positioning
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -208,69 +198,49 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       }
     }
 
-    // Add venue markers with precise geographic positioning
+    // Add venue markers with exact geographic coordinates
     venuesToShow.forEach(venue => {
       const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
       
-      // Create marker element with larger hover area
+      // Create marker element
       const el = document.createElement('div');
-      el.className = 'venue-marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
+      el.style.width = '20px';
+      el.style.height = '20px';
       el.style.borderRadius = '50%';
       el.style.backgroundColor = inSunlight ? '#f59e0b' : '#64748b';
-      el.style.border = '3px solid white';
+      el.style.border = '2px solid white';
       el.style.cursor = 'pointer';
-      el.style.boxShadow = inSunlight ? '0 0 15px rgba(245, 158, 11, 0.8)' : '0 3px 6px rgba(0,0,0,0.3)';
-      el.style.position = 'relative';
-      el.style.zIndex = '100';
+      el.style.boxShadow = inSunlight ? '0 0 10px rgba(245, 158, 11, 0.6)' : '0 2px 4px rgba(0,0,0,0.2)';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
+      el.style.fontSize = '10px';
       el.style.transition = 'all 0.2s ease';
-
-      // Add larger invisible hover area
-      const hoverArea = document.createElement('div');
-      hoverArea.style.position = 'absolute';
-      hoverArea.style.width = '40px';
-      hoverArea.style.height = '40px';
-      hoverArea.style.top = '-8px';
-      hoverArea.style.left = '-8px';
-      hoverArea.style.borderRadius = '50%';
-      hoverArea.style.backgroundColor = 'transparent';
-      hoverArea.style.cursor = 'pointer';
-      hoverArea.style.zIndex = '101';
-      
-      el.appendChild(hoverArea);
 
       // Add venue type icon
       const icon = venue.type === 'cafe' ? '☕' : 
                    venue.type === 'bar' ? '🍺' : 
                    venue.type === 'park' ? '🌳' : '🍽️';
       
-      el.innerHTML = `<span style="font-size: 12px; z-index: 102; position: relative;">${icon}</span>` + el.innerHTML;
+      el.innerHTML = icon;
 
-      // Create marker with exact coordinates that stay fixed to map
+      // Create marker with exact coordinates - this ensures venues stay locked to geographic position
       const marker = new mapboxgl.Marker({
         element: el,
-        anchor: 'center'
+        anchor: 'center' // Center the marker on the exact coordinates
       })
-        .setLngLat([venue.lng, venue.lat])
+        .setLngLat([venue.lng, venue.lat]) // Use exact lat/lng from venue data
         .addTo(map.current!);
 
-      // Add hover events to the hover area
-      hoverArea.addEventListener('mouseenter', (e) => {
-        e.stopPropagation();
+      // Add hover events with proper venue data
+      el.addEventListener('mouseenter', () => {
         onVenueHover?.(venue);
-        el.style.transform = 'scale(1.3)';
-        el.style.zIndex = '200';
+        el.style.transform = 'scale(1.2)';
       });
       
-      hoverArea.addEventListener('mouseleave', (e) => {
-        e.stopPropagation();
+      el.addEventListener('mouseleave', () => {
         onVenueHover?.(null);
         el.style.transform = 'scale(1)';
-        el.style.zIndex = '100';
       });
 
       markersRef.current.push(marker);
@@ -284,7 +254,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
   return (
     <div className="relative w-full h-full">
       {/* Rotation Slider */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-sun-200 shadow-lg">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
         <div className="flex items-center space-x-3 min-w-[200px]">
           <span className="text-sm font-medium text-gray-700">Rotate</span>
           <Slider
@@ -294,9 +264,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
             min={0}
             step={5}
             className="flex-1"
-            style={{
-              '--slider-track-bg': 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)'
-            } as any}
           />
           <span className="text-sm text-gray-600 min-w-[30px]">{mapRotation[0]}°</span>
         </div>
@@ -334,20 +301,20 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         </div>
       )}
 
-      {/* Sun Information Box - moved to bottom */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-6 py-3 border border-sun-200 shadow-lg min-w-[400px]">
-        <div className="flex items-center justify-between space-x-8">
+      {/* Sun Information Box - positioned below the map */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-lg px-8 py-4 border border-gray-200 shadow-lg">
+        <div className="flex items-center justify-center space-x-8 min-w-[500px]">
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">Elevation:</span>
-            <span className="font-medium text-gray-900">{sunPosition.elevation.toFixed(1)}°</span>
+            <span className="font-semibold text-gray-900">{sunPosition.elevation.toFixed(1)}°</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">Azimuth:</span>
-            <span className="font-medium text-gray-900">{sunPosition.azimuth.toFixed(1)}°</span>
+            <span className="font-semibold text-gray-900">{sunPosition.azimuth.toFixed(1)}°</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <span className="text-2xl">{sunPosition.elevation > 0 ? '☀️' : '🌙'}</span>
-            <span className="font-medium text-gray-900">
+            <span className="font-semibold text-gray-900">
               {sunPosition.elevation > 0 ? 'Day' : 'Night'}
             </span>
           </div>

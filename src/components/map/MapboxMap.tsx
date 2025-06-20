@@ -1,9 +1,13 @@
+
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { SunPosition } from '@/utils/sunCalculator';
 import { stockholmVenues } from '@/data/stockholmVenues';
 import { Slider } from '@/components/ui/slider';
+import { buildingService, BuildingData } from '@/services/buildingService';
+import { terrainService } from '@/services/terrainService';
+import { EnhancedShadowCalculator } from '@/utils/enhancedShadowCalculator';
 
 // Set the Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiYnVyc3ZpayIsImEiOiJjbWMzd3ByYXMwOHltMmxxdDV6bTdndnhtIn0.WzSEFPqiDkHGq4_XArpJ0g';
@@ -21,6 +25,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
   const [mapLoaded, setMapLoaded] = useState(false);
   const [styleLoaded, setStyleLoaded] = useState(false);
   const [mapRotation, setMapRotation] = useState([0]);
+  const [buildingData, setBuildingData] = useState<BuildingData[]>([]);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
@@ -70,106 +75,142 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     };
   }, []);
 
-  // Add enhanced 3D buildings with individual shadows for each building
+  // Load building data when map is ready
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const loadBuildingData = async () => {
+      try {
+        const bounds = map.current!.getBounds();
+        const buildings = await buildingService.getBuildingsInArea({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest()
+        });
+        setBuildingData(buildings);
+      } catch (error) {
+        console.error('Failed to load building data:', error);
+      }
+    };
+
+    loadBuildingData();
+
+    // Reload building data when map moves significantly
+    map.current.on('moveend', () => {
+      if (map.current!.getZoom() > 12) {
+        loadBuildingData();
+      }
+    });
+  }, [mapLoaded]);
+
+  // Add enhanced 3D buildings with realistic individual shadows
   useEffect(() => {
     if (!map.current || !styleLoaded) return;
 
-    try {
-      // Remove existing layers if they exist
-      if (map.current.getLayer('3d-buildings')) {
-        map.current.removeLayer('3d-buildings');
-      }
-      if (map.current.getLayer('building-shadows')) {
-        map.current.removeLayer('building-shadows');
-      }
-      if (map.current.getSource('building-shadows')) {
-        map.current.removeSource('building-shadows');
-      }
-
-      // Add enhanced 3D buildings layer
-      map.current.addLayer({
-        id: '3d-buildings',
-        source: 'composite',
-        'source-layer': 'building',
-        filter: ['==', 'extrude', 'true'],
-        type: 'fill-extrusion',
-        minzoom: 10,
-        paint: {
-          'fill-extrusion-color': [
-            'interpolate',
-            ['linear'],
-            ['get', 'height'],
-            0,
-            '#e2e8f0',
-            50,
-            '#cbd5e1',
-            100,
-            '#94a3b8',
-            200,
-            '#64748b'
-          ],
-          'fill-extrusion-height': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            10,
-            0,
-            12.5,
-            ['get', 'height']
-          ],
-          'fill-extrusion-base': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            10,
-            0,
-            12.5,
-            ['get', 'min_height']
-          ],
-          'fill-extrusion-opacity': 0.8
+    const updateShadows = async () => {
+      try {
+        // Remove existing layers if they exist
+        if (map.current!.getLayer('3d-buildings')) {
+          map.current!.removeLayer('3d-buildings');
         }
-      });
+        if (map.current!.getLayer('building-shadows')) {
+          map.current!.removeLayer('building-shadows');
+        }
+        if (map.current!.getSource('building-shadows')) {
+          map.current!.removeSource('building-shadows');
+        }
 
-      // Add individual building shadows that follow the sun position exactly
-      if (sunPosition.elevation > 5) {
-        const shadowOpacity = Math.max(0.3, Math.min(0.8, (90 - sunPosition.elevation) / 90 * 0.9));
-        
-        // Calculate shadow direction based on sun azimuth (opposite direction)
-        const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
-        const shadowRadians = (shadowAzimuth * Math.PI) / 180;
-        
-        // Shadow length based on sun elevation - lower sun = longer shadows
-        const shadowLength = sunPosition.elevation > 0 ? 
-          Math.max(10, 100 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
-        
-        // Calculate shadow offset in meters (geographic projection)
-        const shadowOffsetX = Math.cos(shadowRadians) * shadowLength * 0.00001; // Convert to degrees
-        const shadowOffsetY = Math.sin(shadowRadians) * shadowLength * 0.00001;
-
-        // Create individual shadows attached to each building's geometry
-        map.current.addLayer({
-          id: 'building-shadows',
+        // Add enhanced 3D buildings layer
+        map.current!.addLayer({
+          id: '3d-buildings',
           source: 'composite',
           'source-layer': 'building',
           filter: ['==', 'extrude', 'true'],
           type: 'fill-extrusion',
-          minzoom: 12,
+          minzoom: 10,
           paint: {
-            'fill-extrusion-color': '#000000',
-            'fill-extrusion-opacity': shadowOpacity,
-            'fill-extrusion-height': 1, // Flat shadow on ground
-            'fill-extrusion-base': 0,
-            // Individual shadow positioning for each building polygon
-            'fill-extrusion-translate': [shadowOffsetX * 10000, shadowOffsetY * 10000], // Scale for visibility
-            'fill-extrusion-translate-anchor': 'map' // Shadows stay fixed to map coordinates
+            'fill-extrusion-color': [
+              'interpolate',
+              ['linear'],
+              ['get', 'height'],
+              0,
+              '#e2e8f0',
+              50,
+              '#cbd5e1',
+              100,
+              '#94a3b8',
+              200,
+              '#64748b'
+            ],
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10,
+              0,
+              12.5,
+              ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10,
+              0,
+              12.5,
+              ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.8
           }
-        }, '3d-buildings'); // Place shadows below buildings
-      }
+        });
 
-    } catch (error) {
-      console.error('Error adding 3D buildings and shadows:', error);
-    }
-  }, [styleLoaded, sunPosition]);
+        // Add realistic shadows for sun above horizon
+        if (sunPosition.elevation > 0) {
+          // Calculate realistic shadow parameters
+          const shadowLength = EnhancedShadowCalculator.calculateRealisticShadowLength(
+            50, // Average building height for calculation
+            sunPosition.elevation
+          );
+
+          // Shadow opacity based on sun elevation - lower sun = darker shadows
+          const shadowOpacity = Math.max(0.15, Math.min(0.85, (90 - sunPosition.elevation) / 90 * 0.9));
+          
+          // Calculate shadow direction based on sun azimuth (opposite direction)
+          const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
+          const shadowRadians = (shadowAzimuth * Math.PI) / 180;
+          
+          // Convert shadow length to map units (much more accurate for low sun angles)
+          const shadowOffsetX = Math.cos(shadowRadians) * shadowLength * 0.000009; // Adjusted scale
+          const shadowOffsetY = Math.sin(shadowRadians) * shadowLength * 0.000009;
+
+          // Create individual building shadows using 3D extrusion
+          map.current!.addLayer({
+            id: 'building-shadows',
+            source: 'composite',
+            'source-layer': 'building',
+            filter: ['==', 'extrude', 'true'],
+            type: 'fill-extrusion',
+            minzoom: 12,
+            paint: {
+              'fill-extrusion-color': '#000000',
+              'fill-extrusion-opacity': shadowOpacity,
+              'fill-extrusion-height': 0.5, // Very thin shadow layer
+              'fill-extrusion-base': 0,
+              // Each building casts its own shadow in the correct direction
+              'fill-extrusion-translate': [shadowOffsetX * 100000, shadowOffsetY * 100000],
+              'fill-extrusion-translate-anchor': 'map'
+            }
+          }, '3d-buildings'); // Place shadows below buildings
+        }
+
+      } catch (error) {
+        console.error('Error updating shadows:', error);
+      }
+    };
+
+    updateShadows();
+  }, [styleLoaded, sunPosition, buildingData]);
 
   // Handle map rotation
   useEffect(() => {
@@ -223,12 +264,12 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       
       el.innerHTML = icon;
 
-      // Create marker with exact coordinates - this ensures venues stay locked to geographic position
+      // Create marker with exact coordinates
       const marker = new mapboxgl.Marker({
         element: el,
-        anchor: 'center' // Center the marker on the exact coordinates
+        anchor: 'center'
       })
-        .setLngLat([venue.lng, venue.lat]) // Use exact lat/lng from venue data
+        .setLngLat([venue.lng, venue.lat])
         .addTo(map.current!);
 
       // Add hover events with proper venue data
@@ -299,26 +340,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
           ☀️
         </div>
       )}
-
-      {/* Sun Information Box - positioned below the map */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-lg px-8 py-4 border border-gray-200 shadow-lg">
-        <div className="flex items-center justify-center space-x-8 min-w-[500px]">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Elevation:</span>
-            <span className="font-semibold text-gray-900">{sunPosition.elevation.toFixed(1)}°</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Azimuth:</span>
-            <span className="font-semibold text-gray-900">{sunPosition.azimuth.toFixed(1)}°</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl">{sunPosition.elevation > 0 ? '☀️' : '🌙'}</span>
-            <span className="font-semibold text-gray-900">
-              {sunPosition.elevation > 0 ? 'Day' : 'Night'}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

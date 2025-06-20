@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -253,19 +252,19 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
 
   return (
     <div className="relative w-full h-full">
-      {/* Rotation Slider */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
-        <div className="flex items-center space-x-3 min-w-[200px]">
+      {/* Rotation Slider - moved below filter area */}
+      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
+        <div className="flex items-center space-x-3 min-w-[250px]">
           <span className="text-sm font-medium text-gray-700">Rotate</span>
           <Slider
             value={mapRotation}
             onValueChange={handleRotationChange}
-            max={360}
-            min={0}
+            max={380}
+            min={-20}
             step={5}
             className="flex-1"
           />
-          <span className="text-sm text-gray-600 min-w-[30px]">{mapRotation[0]}°</span>
+          <span className="text-sm text-gray-600 min-w-[40px]">{mapRotation[0]}°</span>
         </div>
       </div>
 

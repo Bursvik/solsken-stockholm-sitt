@@ -1,9 +1,9 @@
+
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { SunPosition } from '@/utils/sunCalculator';
 import { stockholmVenues } from '@/data/stockholmVenues';
-import { Slider } from '@/components/ui/slider';
 import { buildingService, BuildingData } from '@/services/buildingService';
 import { terrainService } from '@/services/terrainService';
 import { EnhancedShadowCalculator } from '@/utils/enhancedShadowCalculator';
@@ -24,7 +24,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [styleLoaded, setStyleLoaded] = useState(false);
-  const [mapRotation, setMapRotation] = useState([0]);
   const [buildingData, setBuildingData] = useState<BuildingData[]>([]);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
@@ -42,8 +41,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
         zoom: 13,
         pitch: 60,
         bearing: 0,
-        antialias: true,
-        terrain: { source: 'mapbox-dem', exaggeration: 1.5 } // Enable terrain
+        antialias: true
       });
 
       // Add navigation controls
@@ -53,7 +51,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
       map.current.on('style.load', () => {
         console.log('Map style loaded');
         
-        // Add terrain source and layer for 3D elevation
+        // Add terrain source and layer for 3D elevation after style loads
         if (map.current && !map.current.getSource('mapbox-dem')) {
           map.current.addSource('mapbox-dem', {
             type: 'raster-dem',
@@ -61,6 +59,9 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
             tileSize: 512,
             maxzoom: 14
           });
+          
+          // Set terrain after source is added
+          map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
           
           // Add hillshade for better terrain visualization
           map.current.addLayer({
@@ -135,6 +136,9 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
     const updateBuildingsAndShadows = async () => {
       try {
         // Remove existing layers if they exist
+        if (map.current!.getLayer('building-shadow-extrusions')) {
+          map.current!.removeLayer('building-shadow-extrusions');
+        }
         if (map.current!.getLayer('building-shadows')) {
           map.current!.removeLayer('building-shadows');
         }
@@ -209,38 +213,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
           const shadowOffsetLng = (Math.cos(shadowRadians) * shadowLength) / metersPerDegree;
           const shadowOffsetLat = (Math.sin(shadowRadians) * shadowLength) / (metersPerDegree * Math.cos(59.3293 * Math.PI / 180));
 
-          // Create shadow layer that's anchored to each building
-          const shadowGeoJSON = {
-            type: 'FeatureCollection' as const,
-            features: [] as any[]
-          };
-
-          // Generate shadow polygons for visible buildings
-          const bounds = map.current!.getBounds();
-          const buildingBounds = {
-            north: bounds.getNorth(),
-            south: bounds.getSouth(),
-            east: bounds.getEast(),
-            west: bounds.getWest()
-          };
-
-          // Add shadow source and layer
-          map.current!.addSource('building-shadows', {
-            type: 'geojson',
-            data: shadowGeoJSON
-          });
-
-          map.current!.addLayer({
-            id: 'building-shadows',
-            source: 'building-shadows',
-            type: 'fill',
-            paint: {
-              'fill-color': '#000000',
-              'fill-opacity': shadowOpacity
-            }
-          }, '3d-buildings'); // Place shadows below buildings
-
-          // Update shadow geometry to be anchored to buildings
+          // Add shadow layer that's anchored to building positions
           map.current!.addLayer({
             id: 'building-shadow-extrusions',
             source: 'composite',
@@ -345,10 +318,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
       markersRef.current.push(marker);
     });
   }, [filter, sunPosition, currentHour, mapLoaded, onVenueHover]);
-
-  const handleRotationChange = (value: number[]) => {
-    setMapRotation(value);
-  };
 
   return (
     <div className="relative w-full h-full">

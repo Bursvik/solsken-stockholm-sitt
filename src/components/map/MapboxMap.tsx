@@ -33,7 +33,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/outdoors-v12',
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
         center: [18.0686, 59.3293],
         zoom: 13,
         pitch: 60,
@@ -71,17 +71,23 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     };
   }, []);
 
-  // Add 3D buildings when style is loaded
+  // Add enhanced 3D buildings with individual shadow sources
   useEffect(() => {
     if (!map.current || !styleLoaded) return;
 
     try {
-      // Check if layer already exists
+      // Remove existing layers if they exist
       if (map.current.getLayer('3d-buildings')) {
         map.current.removeLayer('3d-buildings');
       }
+      if (map.current.getLayer('building-shadows')) {
+        map.current.removeLayer('building-shadows');
+      }
+      if (map.current.getSource('building-shadows')) {
+        map.current.removeSource('building-shadows');
+      }
 
-      // Add 3D buildings layer with enhanced properties
+      // Add enhanced 3D buildings layer
       map.current.addLayer({
         id: '3d-buildings',
         source: 'composite',
@@ -90,7 +96,19 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
         type: 'fill-extrusion',
         minzoom: 10,
         paint: {
-          'fill-extrusion-color': '#d4d4d8',
+          'fill-extrusion-color': [
+            'interpolate',
+            ['linear'],
+            ['get', 'height'],
+            0,
+            '#e2e8f0',
+            50,
+            '#cbd5e1',
+            100,
+            '#94a3b8',
+            200,
+            '#64748b'
+          ],
           'fill-extrusion-height': [
             'interpolate',
             ['linear'],
@@ -109,80 +127,39 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
             12.5,
             ['get', 'min_height']
           ],
-          'fill-extrusion-opacity': 0.9,
-          'fill-extrusion-ambient-occlusion-intensity': 0.3,
+          'fill-extrusion-opacity': 0.8,
+          'fill-extrusion-ambient-occlusion-intensity': 0.4,
           'fill-extrusion-ambient-occlusion-radius': 3.0
         }
       });
 
-    } catch (error) {
-      console.error('Error adding 3D buildings:', error);
-    }
-  }, [styleLoaded]);
-
-  // Update realistic shadow system based on actual sun position
-  useEffect(() => {
-    if (!map.current || !styleLoaded || !map.current.getLayer('3d-buildings')) return;
-
-    try {
-      // Calculate realistic shadow properties based on sun position
-      const isDay = sunPosition.elevation > 0;
-      const lightIntensity = Math.max(0, Math.sin(sunPosition.elevation * Math.PI / 180));
-      
-      // Sun azimuth correction: 0° = North, 90° = East, 180° = South, 270° = West
-      // Convert to standard mathematical angle (0° = East, counterclockwise)
-      const sunAzimuthMath = (90 - sunPosition.azimuth + 360) % 360;
-      const sunAzimuthRadians = (sunAzimuthMath * Math.PI) / 180;
-
-      // Calculate shadow direction (opposite to sun direction)
-      const shadowAzimuthRadians = sunAzimuthRadians + Math.PI;
-      
-      // Shadow length based on sun elevation (lower sun = longer shadows)
-      const shadowLength = sunPosition.elevation > 0 ? 
-        Math.max(10, 100 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
-      
-      // Calculate shadow offset in map units (meters)
-      const shadowOffsetX = Math.cos(shadowAzimuthRadians) * shadowLength;
-      const shadowOffsetY = Math.sin(shadowAzimuthRadians) * shadowLength;
-
-      // Update building colors based on time of day and sun intensity
-      const buildingColor = isDay 
-        ? `hsl(${200 + sunPosition.elevation * 0.5}, ${15 + lightIntensity * 25}%, ${70 + lightIntensity * 20}%)`
-        : '#4a5568';
-
-      // Update 3D buildings with dynamic lighting
-      map.current.setPaintProperty('3d-buildings', 'fill-extrusion-color', [
-        'interpolate',
-        ['linear'],
-        ['get', 'height'],
-        0,
-        buildingColor,
-        200,
-        isDay ? '#e2e8f0' : '#2d3748'
-      ]);
-
-      // Remove existing shadow layer if it exists
-      if (map.current.getLayer('building-shadows')) {
-        map.current.removeLayer('building-shadows');
-      }
-      if (map.current.getSource('building-shadows')) {
-        map.current.removeSource('building-shadows');
-      }
-
-      // Add realistic ground shadows that stay fixed regardless of camera angle
-      if (isDay && sunPosition.elevation > 5) { // Only show shadows when sun is reasonably high
-        const shadowOpacity = Math.max(0.1, Math.min(0.7, (90 - sunPosition.elevation) / 90 * 0.8));
+      // Add individual building shadows that are attached to each building
+      if (sunPosition.elevation > 5) {
+        const shadowOpacity = Math.max(0.2, Math.min(0.7, (90 - sunPosition.elevation) / 90 * 0.8));
         
+        // Calculate shadow offset based on sun position
+        const sunAzimuthMath = (90 - sunPosition.azimuth + 360) % 360;
+        const sunAzimuthRadians = (sunAzimuthMath * Math.PI) / 180;
+        const shadowAzimuthRadians = sunAzimuthRadians + Math.PI;
+        
+        // Shadow length calculation based on sun elevation
+        const baseShadowLength = sunPosition.elevation > 0 ? 
+          Math.max(5, 50 / Math.tan(Math.max(sunPosition.elevation * Math.PI / 180, 0.1))) : 0;
+        
+        const shadowOffsetX = Math.cos(shadowAzimuthRadians) * baseShadowLength;
+        const shadowOffsetY = Math.sin(shadowAzimuthRadians) * baseShadowLength;
+
+        // Create individual shadow layer for each building
         map.current.addLayer({
           id: 'building-shadows',
           source: 'composite',
           'source-layer': 'building',
           filter: ['==', 'extrude', 'true'],
-          type: 'fill',
+          type: 'fill-extrusion',
           minzoom: 12,
           paint: {
-            'fill-color': 'rgba(0, 0, 0, 0.6)',
-            'fill-opacity': [
+            'fill-extrusion-color': 'rgba(0, 0, 0, 0.6)',
+            'fill-extrusion-opacity': [
               'interpolate',
               ['linear'],
               ['zoom'],
@@ -191,17 +168,19 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
               16,
               shadowOpacity
             ],
-            // Use translate to create shadows that stay fixed in world coordinates
-            'fill-translate': [shadowOffsetX, shadowOffsetY],
-            'fill-translate-anchor': 'map' // This ensures shadows stay fixed to map coordinates
+            'fill-extrusion-height': 0.5,
+            'fill-extrusion-base': 0,
+            // Translate each building's shadow individually
+            'fill-extrusion-translate': [shadowOffsetX, shadowOffsetY],
+            'fill-extrusion-translate-anchor': 'map'
           }
         }, '3d-buildings');
       }
 
     } catch (error) {
-      console.error('Error updating sun lighting:', error);
+      console.error('Error adding 3D buildings and shadows:', error);
     }
-  }, [sunPosition, styleLoaded]);
+  }, [styleLoaded, sunPosition]);
 
   // Handle map rotation
   useEffect(() => {
@@ -209,7 +188,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
     map.current.setBearing(mapRotation[0]);
   }, [mapRotation]);
 
-  // Update venue markers with proper positioning that follows map transformations
+  // Update venue markers with fixed positioning
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -229,52 +208,69 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
       }
     }
 
-    // Add venue markers with improved hover detection
+    // Add venue markers with precise geographic positioning
     venuesToShow.forEach(venue => {
       const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
       
-      // Create marker element with precise hover area
+      // Create marker element with larger hover area
       const el = document.createElement('div');
       el.className = 'venue-marker';
-      el.style.width = '20px';
-      el.style.height = '20px';
+      el.style.width = '24px';
+      el.style.height = '24px';
       el.style.borderRadius = '50%';
       el.style.backgroundColor = inSunlight ? '#f59e0b' : '#64748b';
-      el.style.border = '2px solid white';
+      el.style.border = '3px solid white';
       el.style.cursor = 'pointer';
-      el.style.boxShadow = inSunlight ? '0 0 12px rgba(245, 158, 11, 0.6)' : '0 2px 4px rgba(0,0,0,0.2)';
+      el.style.boxShadow = inSunlight ? '0 0 15px rgba(245, 158, 11, 0.8)' : '0 3px 6px rgba(0,0,0,0.3)';
       el.style.position = 'relative';
-      el.style.zIndex = '10';
+      el.style.zIndex = '100';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
+      el.style.transition = 'all 0.2s ease';
+
+      // Add larger invisible hover area
+      const hoverArea = document.createElement('div');
+      hoverArea.style.position = 'absolute';
+      hoverArea.style.width = '40px';
+      hoverArea.style.height = '40px';
+      hoverArea.style.top = '-8px';
+      hoverArea.style.left = '-8px';
+      hoverArea.style.borderRadius = '50%';
+      hoverArea.style.backgroundColor = 'transparent';
+      hoverArea.style.cursor = 'pointer';
+      hoverArea.style.zIndex = '101';
+      
+      el.appendChild(hoverArea);
 
       // Add venue type icon
       const icon = venue.type === 'cafe' ? '☕' : 
                    venue.type === 'bar' ? '🍺' : 
                    venue.type === 'park' ? '🌳' : '🍽️';
       
-      el.innerHTML = `<span style="font-size: 10px;">${icon}</span>`;
+      el.innerHTML = `<span style="font-size: 12px; z-index: 102; position: relative;">${icon}</span>` + el.innerHTML;
 
-      // Create marker with precise coordinates
-      const marker = new mapboxgl.Marker(el)
+      // Create marker with exact coordinates that stay fixed to map
+      const marker = new mapboxgl.Marker({
+        element: el,
+        anchor: 'center'
+      })
         .setLngLat([venue.lng, venue.lat])
         .addTo(map.current!);
 
-      // Add hover events with better detection area
-      el.addEventListener('mouseenter', (e) => {
+      // Add hover events to the hover area
+      hoverArea.addEventListener('mouseenter', (e) => {
         e.stopPropagation();
         onVenueHover?.(venue);
-        el.style.transform = 'scale(1.2)';
-        el.style.transition = 'transform 0.2s ease';
-        el.style.zIndex = '20';
+        el.style.transform = 'scale(1.3)';
+        el.style.zIndex = '200';
       });
       
-      el.addEventListener('mouseleave', (e) => {
+      hoverArea.addEventListener('mouseleave', (e) => {
         e.stopPropagation();
         onVenueHover?.(null);
         el.style.transform = 'scale(1)';
-        el.style.zIndex = '10';
+        el.style.zIndex = '100';
       });
 
       markersRef.current.push(marker);
@@ -337,6 +333,26 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover }: M
           ☀️
         </div>
       )}
+
+      {/* Sun Information Box - moved to bottom */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg px-6 py-3 border border-sun-200 shadow-lg min-w-[400px]">
+        <div className="flex items-center justify-between space-x-8">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Elevation:</span>
+            <span className="font-medium text-gray-900">{sunPosition.elevation.toFixed(1)}°</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Azimuth:</span>
+            <span className="font-medium text-gray-900">{sunPosition.azimuth.toFixed(1)}°</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl">{sunPosition.elevation > 0 ? '☀️' : '🌙'}</span>
+            <span className="font-medium text-gray-900">
+              {sunPosition.elevation > 0 ? 'Day' : 'Night'}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

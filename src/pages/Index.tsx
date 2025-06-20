@@ -42,9 +42,9 @@ const Index = () => {
 
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Map/List View */}
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Map/List View - takes up 3 columns */}
+            <div className="lg:col-span-3">
               <Card className="h-[600px] overflow-hidden bg-white/90 backdrop-blur-sm border-sun-200">
                 {viewMode === 'map' ? (
                   <StockholmMap 
@@ -67,35 +67,15 @@ const Index = () => {
               </Card>
             </div>
 
-            {/* Info Panel */}
+            {/* Info Panel - takes up 1 column */}
             <div className="space-y-4">
               <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Sun Information</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Elevation</span>
-                    <span className="font-medium">{sunPosition.elevation.toFixed(1)}°</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Azimuth</span>
-                    <span className="font-medium">{sunPosition.azimuth.toFixed(1)}°</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Daylight</span>
-                    <span className="font-medium">
-                      {sunPosition.elevation > 0 ? '☀️ Day' : '🌙 Night'}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Sunny Places</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Current Venues</h3>
                 <div className="text-2xl font-bold text-sun-600 mb-2">
-                  {sunnyVenues.length} places
+                  {sunnyVenues.length} sunny
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Currently have direct sunlight on their outdoor areas
+                  Places with direct sunlight right now
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -122,16 +102,6 @@ const Index = () => {
                       {sunnyVenues.filter(v => v.type === 'park').length}
                     </span>
                   </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-white/90 backdrop-blur-sm border-sun-200">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Quick Tips</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>• Best sun exposure is typically between 11 AM - 3 PM</p>
-                  <p>• South-facing terraces get the most sunlight</p>
-                  <p>• Check weather conditions for cloud coverage</p>
-                  <p>• Parks offer great sunny spaces for picnics</p>
                 </div>
               </Card>
             </div>

@@ -67,9 +67,10 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
 
           const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
           
+          // Create marker element with better styling
           const el = document.createElement('div');
-          el.style.width = '24px';
-          el.style.height = '24px';
+          el.style.width = '32px';
+          el.style.height = '32px';
           el.style.borderRadius = '50%';
           el.style.backgroundColor = inSunlight ? '#f59e0b' : '#64748b';
           el.style.border = '3px solid white';
@@ -78,15 +79,23 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           el.style.display = 'flex';
           el.style.alignItems = 'center';
           el.style.justifyContent = 'center';
-          el.style.fontSize = '12px';
+          el.style.fontSize = '16px';
+          el.style.fontFamily = 'system-ui, -apple-system, sans-serif';
           el.style.transition = 'all 0.2s ease';
           el.style.zIndex = '1000';
+          el.style.position = 'relative';
+          el.style.userSelect = 'none';
+          el.style.pointerEvents = 'auto';
 
-          const icon = venue.type === 'cafe' ? '☕' : 
-                       venue.type === 'bar' ? '🍺' : 
-                       venue.type === 'park' ? '🌳' : '🍽️';
+          // Use text content instead of innerHTML for better emoji rendering
+          const iconMap = {
+            'cafe': '☕',
+            'bar': '🍺',
+            'park': '🌳',
+            'restaurant': '🍽️'
+          };
           
-          el.innerHTML = icon;
+          el.textContent = iconMap[venue.type] || '📍';
 
           const marker = new mapboxgl.Marker({
             element: el,
@@ -96,6 +105,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           if (map && map.getCanvas()) {
             marker.addTo(map);
 
+            // Add hover effects
             el.addEventListener('mouseenter', () => {
               if (onVenueHover) onVenueHover(venue);
               el.style.transform = 'scale(1.3)';
@@ -109,7 +119,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
             });
 
             markersRef.current.push(marker);
-            console.log('Added marker for:', venue.name, 'at', [venue.lng, venue.lat]);
+            console.log('Added marker for:', venue.name, 'at', [venue.lng, venue.lat], 'with icon:', iconMap[venue.type]);
           }
         } catch (error) {
           console.warn('Error creating marker for venue:', venue.name, error);

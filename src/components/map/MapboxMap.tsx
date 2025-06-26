@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapCore from './core/MapCore';
 import TerrainSetup from './terrain/TerrainSetup';
@@ -17,10 +17,20 @@ interface MapboxMapProps {
 
 const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, mapRotation = [0] }: MapboxMapProps) => {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   const handleMapLoad = (loadedMap: mapboxgl.Map) => {
     console.log('Map loaded successfully');
     setMap(loadedMap);
+    
+    // Wait for style to be fully loaded before marking as ready
+    if (loadedMap.isStyleLoaded()) {
+      setIsMapReady(true);
+    } else {
+      loadedMap.once('style.load', () => {
+        setIsMapReady(true);
+      });
+    }
   };
 
   if (!mapboxgl.accessToken) {
@@ -37,7 +47,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
   return (
     <>
       <MapCore onMapLoad={handleMapLoad} mapRotation={mapRotation} />
-      {map && (
+      {map && isMapReady && (
         <>
           <TerrainSetup map={map} />
           <BuildingShadows map={map} sunPosition={sunPosition} />

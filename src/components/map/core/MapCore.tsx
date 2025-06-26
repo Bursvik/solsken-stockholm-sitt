@@ -37,6 +37,7 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
       // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
 
+      // Better error handling for map events
       map.current.on('load', () => {
         console.log('Map fully loaded');
         setMapLoaded(true);
@@ -51,6 +52,12 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
         setError('Failed to load map. Please check your internet connection.');
       });
 
+      // Handle style loading errors
+      map.current.on('style.error', (e) => {
+        console.error('Mapbox style error:', e);
+        setError('Failed to load map style.');
+      });
+
     } catch (error) {
       console.error('Error initializing map:', error);
       setError('Failed to initialize map');
@@ -58,18 +65,25 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
 
     return () => {
       if (map.current) {
-        map.current.remove();
+        try {
+          map.current.remove();
+        } catch (error) {
+          console.warn('Error removing map:', error);
+        }
         map.current = null;
       }
     };
   }, [onMapLoad]);
 
-  // Handle map rotation
+  // Handle map rotation with better error handling
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
     
     try {
-      map.current.setBearing(mapRotation[0]);
+      // Ensure the map is still valid before setting bearing
+      if (map.current.getCanvas()) {
+        map.current.setBearing(mapRotation[0]);
+      }
     } catch (error) {
       console.error('Error setting map bearing:', error);
     }

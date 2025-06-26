@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import { drawDetailedMap } from './mapRendering/mapRenderer';
-import { drawShadows } from './mapRendering/shadowRenderer';
 import { drawVenues, getVenueAtPosition } from './mapRendering/venueRenderer';
 import { drawSunIndicator } from './mapRendering/sunRenderer';
 import VenueTooltip from './VenueTooltip';
@@ -84,9 +83,8 @@ const MapCanvas = ({
     ctx.translate(transform.translateX, transform.translateY);
     ctx.scale(transform.scale, transform.scale);
 
-    // Draw all map layers
+    // Draw all map layers (removed shadow rendering)
     drawDetailedMap(ctx, canvas.offsetWidth, canvas.offsetHeight);
-    drawShadows(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight, currentTime);
     drawVenues(ctx, canvas.offsetWidth, canvas.offsetHeight, sunPosition, filter, currentHour);
     drawSunIndicator(ctx, sunPosition, canvas.offsetWidth, canvas.offsetHeight);
 

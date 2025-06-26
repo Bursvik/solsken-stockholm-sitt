@@ -19,18 +19,38 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
   const [isMapReady, setIsMapReady] = useState(false);
 
   const handleMapLoad = (loadedMap: mapboxgl.Map) => {
-    console.log('Map loaded successfully');
+    console.log('MapboxMap: Map loaded successfully');
     setMap(loadedMap);
     
-    // Wait for style to be fully loaded before marking as ready
-    if (loadedMap.isStyleLoaded()) {
-      setIsMapReady(true);
-    } else {
-      loadedMap.once('style.load', () => {
+    // Enhanced readiness check
+    const checkMapReady = () => {
+      if (loadedMap.isStyleLoaded() && loadedMap.getCanvas()) {
+        console.log('MapboxMap: Map is fully ready');
         setIsMapReady(true);
-      });
+      } else {
+        console.log('MapboxMap: Waiting for map to be fully ready...');
+        setTimeout(checkMapReady, 100);
+      }
+    };
+
+    if (loadedMap.isStyleLoaded()) {
+      checkMapReady();
+    } else {
+      loadedMap.once('style.load', checkMapReady);
     }
   };
+
+  // Debug effect to track state changes
+  useEffect(() => {
+    console.log('MapboxMap state:', { 
+      hasMap: !!map, 
+      isMapReady, 
+      mapLoaded: map?.isStyleLoaded(),
+      hasCanvas: !!map?.getCanvas(),
+      filter,
+      currentTime: currentTime.toISOString()
+    });
+  }, [map, isMapReady, filter, currentTime]);
 
   if (!mapboxgl.accessToken) {
     return (

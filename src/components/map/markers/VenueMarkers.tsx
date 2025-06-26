@@ -67,7 +67,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
 
           const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
           
-          // Create marker element with better styling
+          // Create marker element with fixed positioning
           const el = document.createElement('div');
           el.style.width = '32px';
           el.style.height = '32px';
@@ -86,6 +86,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           el.style.position = 'relative';
           el.style.userSelect = 'none';
           el.style.pointerEvents = 'auto';
+          el.style.transformOrigin = 'center center';
 
           // Use text content instead of innerHTML for better emoji rendering
           const iconMap = {
@@ -105,7 +106,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           if (map && map.getCanvas()) {
             marker.addTo(map);
 
-            // Add hover effects
+            // Add hover effects with proper positioning
             el.addEventListener('mouseenter', () => {
               if (onVenueHover) onVenueHover(venue);
               el.style.transform = 'scale(1.3)';

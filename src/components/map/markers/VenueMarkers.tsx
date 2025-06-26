@@ -32,12 +32,6 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
     const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
     const updateKey = `${filter}-${currentHour}-${sunPosition.elevation}`;
     
-    // Force update on first run or when key changes
-    if (lastUpdateRef.current === updateKey && markersRef.current.length > 0) {
-      console.log('VenueMarkers: No changes needed, skipping update');
-      return;
-    }
-
     console.log('VenueMarkers: Creating markers', { 
       filter, 
       currentHour, 
@@ -94,7 +88,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
         const el = document.createElement('div');
         el.className = 'venue-marker';
         
-        // Apply styles directly
+        // Apply styles directly with fixed positioning
         el.style.cssText = `
           width: 32px;
           height: 32px;
@@ -108,12 +102,11 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           justify-content: center;
           font-size: 16px;
           font-family: system-ui, -apple-system, sans-serif;
-          transition: transform 0.2s ease;
-          transform-origin: center center;
-          z-index: 1000;
-          position: relative;
+          transition: all 0.2s ease;
           user-select: none;
           pointer-events: auto;
+          position: relative;
+          z-index: 1000;
         `;
 
         // Set emoji
@@ -126,7 +119,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
         
         el.textContent = iconMap[venue.type] || '📍';
 
-        // Create marker
+        // Create marker with proper anchor
         const marker = new mapboxgl.Marker({
           element: el,
           anchor: 'center'
@@ -135,16 +128,18 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
         // Add to map
         marker.addTo(map);
 
-        // Add hover effects
+        // Add stable hover effects without transform
         el.addEventListener('mouseenter', () => {
           if (onVenueHover) onVenueHover(venue);
-          el.style.transform = 'scale(1.2)';
+          el.style.boxShadow = inSunlight ? '0 0 20px rgba(245, 158, 11, 0.8)' : '0 4px 8px rgba(0,0,0,0.4)';
+          el.style.backgroundColor = inSunlight ? '#fbbf24' : '#475569';
           el.style.zIndex = '1001';
         });
         
         el.addEventListener('mouseleave', () => {
           if (onVenueHover) onVenueHover(null);
-          el.style.transform = 'scale(1)';
+          el.style.boxShadow = inSunlight ? '0 0 12px rgba(245, 158, 11, 0.6)' : '0 2px 4px rgba(0,0,0,0.3)';
+          el.style.backgroundColor = inSunlight ? '#f59e0b' : '#64748b';
           el.style.zIndex = '1000';
         });
 

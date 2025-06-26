@@ -83,11 +83,6 @@ function toDegrees(radians: number): number {
   return radians * 180 / Math.PI;
 }
 
-export function calculateShadowLength(objectHeight: number, sunElevation: number): number {
-  if (sunElevation <= 0) return Infinity;
-  return objectHeight / Math.tan(toRadians(sunElevation));
-}
-
 export function getSunIntensity(sunElevation: number): number {
   if (sunElevation <= 0) return 0;
   const airMass = 1 / Math.sin(toRadians(Math.max(sunElevation, 1)));

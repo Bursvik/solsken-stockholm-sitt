@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 
 interface TerrainSetupProps {
@@ -7,12 +7,19 @@ interface TerrainSetupProps {
 }
 
 const TerrainSetup = ({ map }: TerrainSetupProps) => {
+  const setupComplete = useRef(false);
+
   useEffect(() => {
-    if (!map) return;
+    if (!map || setupComplete.current) return;
 
     const setupTerrain = () => {
       try {
-        // Add terrain source and layer for 3D elevation
+        // Only setup terrain once
+        if (setupComplete.current || !map.isStyleLoaded()) return;
+
+        console.log('Setting up terrain and 3D buildings...');
+
+        // Add terrain source
         if (!map.getSource('mapbox-dem')) {
           map.addSource('mapbox-dem', {
             type: 'raster-dem',
@@ -20,11 +27,15 @@ const TerrainSetup = ({ map }: TerrainSetupProps) => {
             tileSize: 512,
             maxzoom: 14
           });
-          
-          // Set terrain after source is added
+        }
+        
+        // Set terrain
+        if (!map.getTerrain()) {
           map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
-          
-          // Add hillshade for better terrain visualization
+        }
+        
+        // Add hillshade layer
+        if (!map.getLayer('hillshading')) {
           map.addLayer({
             id: 'hillshading',
             source: 'mapbox-dem',
@@ -35,8 +46,10 @@ const TerrainSetup = ({ map }: TerrainSetupProps) => {
               'hillshade-exaggeration': 0.25
             }
           });
+        }
 
-          // Add enhanced 3D buildings layer that follows terrain
+        // Add 3D buildings layer
+        if (!map.getLayer('3d-buildings')) {
           map.addLayer({
             id: '3d-buildings',
             source: 'composite',
@@ -80,20 +93,23 @@ const TerrainSetup = ({ map }: TerrainSetupProps) => {
             }
           });
         }
+
+        setupComplete.current = true;
+        console.log('Terrain setup completed');
       } catch (error) {
         console.error('Error setting up terrain:', error);
       }
     };
 
-    map.on('style.load', setupTerrain);
-    
-    // If style is already loaded, setup terrain immediately
+    // Setup terrain when style is loaded
     if (map.isStyleLoaded()) {
       setupTerrain();
+    } else {
+      map.once('style.load', setupTerrain);
     }
 
     return () => {
-      map.off('style.load', setupTerrain);
+      setupComplete.current = false;
     };
   }, [map]);
 

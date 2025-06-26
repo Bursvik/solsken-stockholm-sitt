@@ -14,15 +14,22 @@ interface VenueMarkersProps {
 
 const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: VenueMarkersProps) => {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const lastFilter = useRef<string>('');
+  const lastHour = useRef<string>('');
 
   useEffect(() => {
-    // Ensure map is fully loaded and ready
     if (!map || !map.isStyleLoaded() || !map.getCanvas()) {
-      console.log('Map not ready for markers yet');
       return;
     }
 
-    // Clear existing markers safely
+    const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
+    
+    // Only update if filter or hour changed
+    if (lastFilter.current === filter && lastHour.current === currentHour) {
+      return;
+    }
+
+    // Clear existing markers
     markersRef.current.forEach(marker => {
       try {
         marker.remove();
@@ -33,8 +40,6 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
     markersRef.current = [];
 
     try {
-      const currentHour = currentTime.getHours().toString().padStart(2, '0') + ':00';
-
       // Filter venues
       let venuesToShow = stockholmVenues;
       if (filter !== 'all') {
@@ -47,12 +52,15 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
         }
       }
 
-      // Add venue markers with better error handling
+      // Add venue markers
       venuesToShow.forEach(venue => {
         try {
+          if (typeof venue.lng !== 'number' || typeof venue.lat !== 'number') {
+            return;
+          }
+
           const inSunlight = sunPosition.elevation > 0 && venue.sunExposed && venue.sunHours.includes(currentHour);
           
-          // Create marker element
           const el = document.createElement('div');
           el.style.width = '20px';
           el.style.height = '20px';
@@ -67,31 +75,20 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
           el.style.fontSize = '10px';
           el.style.transition = 'all 0.2s ease';
 
-          // Add venue type icon
           const icon = venue.type === 'cafe' ? '☕' : 
                        venue.type === 'bar' ? '🍺' : 
                        venue.type === 'park' ? '🌳' : '🍽️';
           
           el.innerHTML = icon;
 
-          // Validate coordinates
-          if (typeof venue.lng !== 'number' || typeof venue.lat !== 'number') {
-            console.warn('Invalid coordinates for venue:', venue.name);
-            return;
-          }
-
-          // Create marker with proper error handling
           const marker = new mapboxgl.Marker({
             element: el,
             anchor: 'center'
-          })
-            .setLngLat([venue.lng, venue.lat]);
+          }).setLngLat([venue.lng, venue.lat]);
 
-          // Only add to map if map is still valid
           if (map && map.getCanvas()) {
             marker.addTo(map);
 
-            // Add hover events
             el.addEventListener('mouseenter', () => {
               if (onVenueHover) onVenueHover(venue);
               el.style.transform = 'scale(1.2)';
@@ -109,7 +106,8 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
         }
       });
 
-      console.log(`Successfully added ${markersRef.current.length} venue markers`);
+      lastFilter.current = filter;
+      lastHour.current = currentHour;
     } catch (error) {
       console.error('Error in VenueMarkers effect:', error);
     }
@@ -124,7 +122,7 @@ const VenueMarkers = ({ map, sunPosition, filter, currentTime, onVenueHover }: V
       });
       markersRef.current = [];
     };
-  }, [map, filter, sunPosition, currentTime, onVenueHover]);
+  }, [map, filter, currentTime.getHours(), sunPosition.elevation]);
 
   return null;
 };

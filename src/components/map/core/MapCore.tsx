@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -16,8 +16,19 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentRotation = useRef(0);
 
-  // Initialize map
+  // Memoize the map load handler to prevent unnecessary re-renders
+  const handleMapLoad = useCallback(() => {
+    console.log('Map fully loaded');
+    setMapLoaded(true);
+    setError(null);
+    if (map.current) {
+      onMapLoad(map.current);
+    }
+  }, [onMapLoad]);
+
+  // Initialize map only once
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -37,22 +48,14 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
       // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
 
-      // Better error handling for map events
-      map.current.on('load', () => {
-        console.log('Map fully loaded');
-        setMapLoaded(true);
-        setError(null);
-        if (map.current) {
-          onMapLoad(map.current);
-        }
-      });
+      // Event listeners
+      map.current.on('load', handleMapLoad);
 
       map.current.on('error', (e) => {
         console.error('Mapbox error:', e);
         setError('Failed to load map. Please check your internet connection.');
       });
 
-      // Handle style loading errors
       map.current.on('style.error', (e) => {
         console.error('Mapbox style error:', e);
         setError('Failed to load map style.');
@@ -73,21 +76,21 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
         map.current = null;
       }
     };
-  }, [onMapLoad]);
+  }, []); // Empty dependency array - only run once
 
-  // Handle map rotation with better error handling
+  // Handle map rotation with debouncing
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current || !mapLoaded || mapRotation[0] === currentRotation.current) return;
     
     try {
-      // Ensure the map is still valid before setting bearing
       if (map.current.getCanvas()) {
+        currentRotation.current = mapRotation[0];
         map.current.setBearing(mapRotation[0]);
       }
     } catch (error) {
       console.error('Error setting map bearing:', error);
     }
-  }, [mapRotation, mapLoaded]);
+  }, [mapRotation[0], mapLoaded]); // Only depend on the actual rotation value
 
   if (error) {
     return (
@@ -111,7 +114,6 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Loading indicator */}
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center">

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { SunPosition } from '@/utils/sunCalculator';
 import MapCore from './core/MapCore';
 import TerrainSetup from './terrain/TerrainSetup';
-import BuildingShadows from './shadows/BuildingShadows';
+import SimpleBuildingShadows from './shadows/SimpleBuildingShadows';
 import VenueMarkers from './markers/VenueMarkers';
 import mapboxgl from 'mapbox-gl';
 
@@ -50,7 +50,7 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
       {map && isMapReady && (
         <>
           <TerrainSetup map={map} />
-          <BuildingShadows map={map} sunPosition={sunPosition} />
+          <SimpleBuildingShadows map={map} sunPosition={sunPosition} />
           <VenueMarkers 
             map={map}
             sunPosition={sunPosition}

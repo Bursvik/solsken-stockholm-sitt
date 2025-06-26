@@ -19,21 +19,37 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
 
   const handleMapLoad = (loadedMap: mapboxgl.Map) => {
+    console.log('Map loaded successfully');
     setMap(loadedMap);
   };
+
+  if (!mapboxgl.accessToken) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-4">
+          <p className="text-red-600 mb-2">Mapbox token not configured</p>
+          <p className="text-sm text-gray-600">Please check the Mapbox configuration</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <MapCore onMapLoad={handleMapLoad} mapRotation={mapRotation} />
-      <TerrainSetup map={map} />
-      <BuildingShadows map={map} sunPosition={sunPosition} />
-      <VenueMarkers 
-        map={map}
-        sunPosition={sunPosition}
-        filter={filter}
-        currentTime={currentTime}
-        onVenueHover={onVenueHover}
-      />
+      {map && (
+        <>
+          <TerrainSetup map={map} />
+          <BuildingShadows map={map} sunPosition={sunPosition} />
+          <VenueMarkers 
+            map={map}
+            sunPosition={sunPosition}
+            filter={filter}
+            currentTime={currentTime}
+            onVenueHover={onVenueHover}
+          />
+        </>
+      )}
     </>
   );
 };

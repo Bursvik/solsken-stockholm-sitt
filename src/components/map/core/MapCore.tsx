@@ -15,12 +15,15 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     try {
+      console.log('Initializing Mapbox map...');
+      
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -37,6 +40,7 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
       map.current.on('load', () => {
         console.log('Map fully loaded');
         setMapLoaded(true);
+        setError(null);
         if (map.current) {
           onMapLoad(map.current);
         }
@@ -44,10 +48,12 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
 
       map.current.on('error', (e) => {
         console.error('Mapbox error:', e);
+        setError('Failed to load map. Please check your internet connection.');
       });
 
     } catch (error) {
       console.error('Error initializing map:', error);
+      setError('Failed to initialize map');
     }
 
     return () => {
@@ -60,9 +66,32 @@ const MapCore = ({ onMapLoad, mapRotation = [0] }: MapCoreProps) => {
 
   // Handle map rotation
   useEffect(() => {
-    if (!map.current) return;
-    map.current.setBearing(mapRotation[0]);
-  }, [mapRotation]);
+    if (!map.current || !mapLoaded) return;
+    
+    try {
+      map.current.setBearing(mapRotation[0]);
+    } catch (error) {
+      console.error('Error setting map bearing:', error);
+    }
+  }, [mapRotation, mapLoaded]);
+
+  if (error) {
+    return (
+      <div className="relative w-full h-full">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <p className="text-red-600 mb-2">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">

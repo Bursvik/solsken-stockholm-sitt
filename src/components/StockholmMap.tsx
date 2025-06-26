@@ -46,7 +46,7 @@ const StockholmMap = ({
 
   return (
     <ErrorBoundary>
-      <div className="relative w-full h-full" onMouseMove={handleMouseMove}>
+      <div className="relative w-full h-full overflow-hidden" onMouseMove={handleMouseMove}>
         <MapboxMap
           currentTime={currentTime}
           sunPosition={sunPosition}
@@ -63,7 +63,7 @@ const StockholmMap = ({
           sunPosition={sunPosition}
         />
 
-        {/* Map Filters with Rotation Control */}
+        {/* Map Filters - Centered and mobile-friendly */}
         <MapFilters
           filter={filter}
           onFilterChange={setFilter}
@@ -71,19 +71,22 @@ const StockholmMap = ({
           onRotationChange={handleRotationChange}
         />
 
-        {/* Top right controls - Map/List toggle only */}
-        <div className="absolute top-4 right-4">
+        {/* Top right controls - Map/List toggle only, mobile positioned */}
+        <div className="absolute top-4 right-4 z-30">
           <MapViewToggle 
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
           />
         </div>
 
-        <VenueTooltip
-          venue={hoveredVenue}
-          x={mousePosition.x}
-          y={mousePosition.y}
-        />
+        {/* Venue tooltip - hidden on mobile to avoid blocking interaction */}
+        <div className="hidden md:block">
+          <VenueTooltip
+            venue={hoveredVenue}
+            x={mousePosition.x}
+            y={mousePosition.y}
+          />
+        </div>
       </div>
     </ErrorBoundary>
   );

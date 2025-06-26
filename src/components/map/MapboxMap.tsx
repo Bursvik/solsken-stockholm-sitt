@@ -206,32 +206,73 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
           
           // Calculate shadow direction (opposite to sun azimuth)
           const shadowAzimuth = (sunPosition.azimuth + 180) % 360;
-          const shadowRadians = (shadowAzimuth * Math.PI) / 180;
           
-          // Convert shadow length to precise map coordinate offsets
-          const metersPerDegree = 111000; // Approximate meters per degree at Stockholm latitude
-          const shadowOffsetLng = (Math.cos(shadowRadians) * shadowLength) / metersPerDegree;
-          const shadowOffsetLat = (Math.sin(shadowRadians) * shadowLength) / (metersPerDegree * Math.cos(59.3293 * Math.PI / 180));
+          // Create anchored shadow polygons using building footprints
+          const shadowGeoJSON = {
+            type: 'FeatureCollection' as const,
+            features: [] as any[]
+          };
 
-          // Add shadow layer that's anchored to building positions
+          // For now, create sample shadow polygons for major buildings
+          const sampleBuildings = [
+            { center: [18.0656, 59.3293], height: 30 }, // Gamla Stan
+            { center: [18.0548, 59.3275], height: 106 }, // City Hall
+            { center: [18.0713, 59.3269], height: 35 }, // Royal Palace
+            { center: [18.0686, 59.3365], height: 150 }, // Norrmalm
+            { center: [18.0725, 59.3385], height: 165 }, // Modern towers
+          ];
+
+          sampleBuildings.forEach((building, index) => {
+            const shadowLengthMeters = EnhancedShadowCalculator.calculateRealisticShadowLength(
+              building.height,
+              sunPosition.elevation
+            );
+
+            // Convert shadow direction to coordinate offset
+            const shadowRadians = (shadowAzimuth * Math.PI) / 180;
+            const metersPerDegree = 111000;
+            const shadowOffsetLng = (Math.cos(shadowRadians) * shadowLengthMeters) / metersPerDegree;
+            const shadowOffsetLat = (Math.sin(shadowRadians) * shadowLengthMeters) / (metersPerDegree * Math.cos(59.3293 * Math.PI / 180));
+
+            // Create shadow polygon anchored to building base
+            const buildingSize = 0.0002; // Building footprint size
+            const shadowFeature = {
+              type: 'Feature' as const,
+              properties: {
+                opacity: shadowOpacity
+              },
+              geometry: {
+                type: 'Polygon' as const,
+                coordinates: [[
+                  [building.center[0] - buildingSize, building.center[1] - buildingSize], // Building corner
+                  [building.center[0] + buildingSize, building.center[1] - buildingSize], // Building corner
+                  [building.center[0] + buildingSize + shadowOffsetLng, building.center[1] - buildingSize + shadowOffsetLat], // Shadow end
+                  [building.center[0] - buildingSize + shadowOffsetLng, building.center[1] - buildingSize + shadowOffsetLat], // Shadow end
+                  [building.center[0] - buildingSize, building.center[1] - buildingSize] // Close polygon
+                ]]
+              }
+            };
+
+            shadowGeoJSON.features.push(shadowFeature);
+          });
+
+          // Add shadow source and layer
+          map.current!.addSource('building-shadows', {
+            type: 'geojson',
+            data: shadowGeoJSON
+          });
+
           map.current!.addLayer({
-            id: 'building-shadow-extrusions',
-            source: 'composite',
-            'source-layer': 'building',
-            filter: ['==', 'extrude', 'true'],
-            type: 'fill-extrusion',
-            minzoom: 12,
+            id: 'building-shadows',
+            source: 'building-shadows',
+            type: 'fill',
             paint: {
-              'fill-extrusion-color': '#000000',
-              'fill-extrusion-opacity': shadowOpacity * 0.6,
-              'fill-extrusion-height': 0.5,
-              'fill-extrusion-base': 0,
-              // Anchor shadows to building positions using translate
-              'fill-extrusion-translate': [
-                shadowOffsetLng * 100000, // Convert to pixels
-                -shadowOffsetLat * 100000  // Negative because map Y is inverted
-              ],
-              'fill-extrusion-translate-anchor': 'map'
+              'fill-color': '#000000',
+              'fill-opacity': [
+                'get',
+                ['get', 'opacity'],
+                shadowOpacity
+              ]
             }
           }, '3d-buildings');
         }
@@ -330,26 +371,6 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-gray-600">Loading Stockholm map with terrain...</p>
           </div>
-        </div>
-      )}
-      
-      {/* Sun indicator overlay */}
-      {sunPosition.elevation > 0 && (
-        <div 
-          className="absolute w-10 h-10 pointer-events-none z-30"
-          style={{
-            top: '20px',
-            right: '20px',
-            background: 'radial-gradient(circle, #fbbf24 30%, rgba(251, 191, 36, 0.4) 70%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            boxShadow: '0 0 20px rgba(251, 191, 36, 0.6)'
-          }}
-        >
-          ☀️
         </div>
       )}
     </div>

@@ -8,12 +8,12 @@ interface MapViewToggleProps {
 
 const MapViewToggle = ({ viewMode, onViewModeChange }: MapViewToggleProps) => {
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-sun-200 overflow-hidden flex">
+    <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-sun-200 overflow-hidden flex shadow-lg">
       <Button
         variant={viewMode === 'map' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('map')}
-        className={`rounded-none text-xs px-2 h-6 ${
+        className={`rounded-none text-xs px-3 h-8 ${
           viewMode === 'map' ? 'bg-sun-500 hover:bg-sun-600 text-white' : ''
         }`}
       >
@@ -23,7 +23,7 @@ const MapViewToggle = ({ viewMode, onViewModeChange }: MapViewToggleProps) => {
         variant={viewMode === 'list' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('list')}
-        className={`rounded-none text-xs px-2 h-6 ${
+        className={`rounded-none text-xs px-3 h-8 ${
           viewMode === 'list' ? 'bg-sun-500 hover:bg-sun-600 text-white' : ''
         }`}
       >

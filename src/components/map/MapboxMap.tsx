@@ -4,6 +4,7 @@ import { SunPosition } from '@/utils/sunCalculator';
 import MapCore from './core/MapCore';
 import TerrainSetup from './terrain/TerrainSetup';
 import VenueMarkers from './markers/VenueMarkers';
+import ShadowRenderer from './shadows/ShadowRenderer';
 import mapboxgl from 'mapbox-gl';
 
 interface MapboxMapProps {
@@ -48,9 +49,10 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
       mapLoaded: map?.isStyleLoaded(),
       hasCanvas: !!map?.getCanvas(),
       filter,
-      currentTime: currentTime.toISOString()
+      currentTime: currentTime.toISOString(),
+      sunElevation: sunPosition.elevation
     });
-  }, [map, isMapReady, filter, currentTime]);
+  }, [map, isMapReady, filter, currentTime, sunPosition.elevation]);
 
   if (!mapboxgl.accessToken) {
     return (
@@ -69,6 +71,11 @@ const MapboxMap = ({ currentTime, sunPosition, filter = 'all', onVenueHover, map
       {map && isMapReady && (
         <>
           <TerrainSetup map={map} />
+          <ShadowRenderer 
+            map={map}
+            sunPosition={sunPosition}
+            currentTime={currentTime}
+          />
           <VenueMarkers 
             map={map}
             sunPosition={sunPosition}

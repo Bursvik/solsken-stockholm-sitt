@@ -44,12 +44,12 @@ const ShadowRenderer = ({ map, sunPosition, currentTime }: ShadowRendererProps) 
             const shadowOffsetLat = Math.sin(shadowAngle) * shadowLength * 0.00001;
 
             return {
-              type: 'Feature',
+              type: "Feature" as const,
               properties: {
                 opacity: Math.max(0.2, Math.min(0.6, (90 - sunPosition.elevation) / 90 * 0.5))
               },
               geometry: {
-                type: 'Polygon',
+                type: "Polygon" as const,
                 coordinates: [[
                   [venue.lng, venue.lat],
                   [venue.lng + shadowOffsetLng, venue.lat + shadowOffsetLat],
